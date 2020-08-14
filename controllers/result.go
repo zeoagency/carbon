@@ -25,6 +25,25 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 		}, errors.New("Method not allowed. Only allowed: POST.")
 	}
 
+	// TODO. Use the rType to specify which method use.
+	// Will be implemented after GetResultFromSerpApiByUsingKeywords method is done.
+	_ = ""
+	// Check type and set it.
+	if v, ok := request.QueryStringParameters["type"]; ok {
+		if v != "keyword" && v != "url" {
+			return events.APIGatewayProxyResponse{
+				StatusCode: http.StatusBadRequest,
+			}, errors.New("Type should be \"keyword\" or \"url\".")
+		}
+
+		// Set it.
+		_ = v
+	} else {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+		}, errors.New("Type is not set.")
+	}
+
 	// Unmarshal the json request.
 	var br bodyRequest
 	err := json.Unmarshal([]byte(request.Body), &br)
@@ -48,7 +67,7 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: http.StatusBadRequest,
-			}, errors.New("You entred non-url input. Check your URLS.")
+			}, err
 		}
 	}
 

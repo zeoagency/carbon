@@ -99,7 +99,7 @@ func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiRe
 
 	if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
 		log.Printf("Error: Unavailable SERP API Service. Status: %d", res.StatusCode)
-		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues while sending request..")
+		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues with SERP API at this moment. Please try later.")
 	}
 
 	// Read the result, unmarshal it to the struct.

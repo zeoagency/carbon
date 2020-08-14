@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	neturl "net/url"
 	"strings"
 )
@@ -87,8 +88,8 @@ func convertToURL(fullURL string) (URL, error) {
 	result := URL{}
 
 	u, err := neturl.Parse(fullURL)
-	if err != nil {
-		return result, err
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return result, errors.New("The input includes non-url(s). Please check your input.")
 	}
 
 	result.FullURL = u.String()
