@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"os"
 
-	"gitlab.com/zeo.org/carbon/models"
+	"gitlab.com/seo.do/zeo-carbon/models"
 )
 
 // The API response includes this struct as an array for each keywords.

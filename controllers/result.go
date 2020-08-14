@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 
-	"gitlab.com/zeo.org/carbon/models"
-	"gitlab.com/zeo.org/carbon/services"
+	"gitlab.com/seo.do/zeo-carbon/models"
+	"gitlab.com/seo.do/zeo-carbon/services"
 )
 
 type bodyRequest struct {
