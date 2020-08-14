@@ -88,12 +88,13 @@ func convertToURL(fullURL string) (URL, error) {
 	result := URL{}
 
 	u, err := neturl.Parse(fullURL)
-	if err != nil || u.Scheme == "" || u.Host == "" {
+	parts := strings.Split(u.Hostname(), ".")
+	if err != nil || u.Scheme == "" || len(parts) < 2 {
 		return result, errors.New("The input includes non-url(s). Please check your input.")
 	}
 
 	result.FullURL = u.String()
-	result.BaseURL = u.Hostname()
+	result.BaseURL = parts[len(parts)-2] + "." + parts[len(parts)-1]
 	result.Keywords = replaceAnyWithSpace(
 		u.EscapedPath(),
 		"/", "\\", "-", "_", ".", "html", "js", "php", "aspx",

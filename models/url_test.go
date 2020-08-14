@@ -14,9 +14,24 @@ func TestUrlSetAdd(t *testing.T) {
 	}
 
 	testDup := append(test, test...)
-	s.Add(testDup...)
+
+	err := s.Add(testDup...)
+	if err != nil {
+		t.Fatal("Error: Set Data Structure issue.")
+	}
 
 	if len(s.URLs) != len(test) {
+		t.Fatal("Error: Set Data Structure issue.")
+	}
+}
+
+func TestUrlSetAddShouldFail(t *testing.T) {
+	s := NewURLSet()
+
+	failTest := []string{"http://nonurl/blablabla"}
+
+	err := s.Add(failTest...)
+	if err == nil {
 		t.Fatal("Error: Set Data Structure issue.")
 	}
 }
