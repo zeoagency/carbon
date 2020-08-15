@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"time"
 
@@ -140,12 +139,7 @@ func parseResponseToMapForURLs(response map[string][]serpApiResponse, urlSet *mo
 					break
 				}
 
-				urlParsed, err := url.Parse(v.URL)
-				if err != nil {
-					fail = append(fail, urlSet.URLs[key].FullURL)
-					continue
-				}
-				urlDomain, err := models.ExtractDomain(urlParsed.Hostname())
+				urlDomain, _, err := models.ExtractURL(v.URL)
 				if err != nil {
 					fail = append(fail, urlSet.URLs[key].FullURL)
 					continue
