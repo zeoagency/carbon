@@ -17,7 +17,7 @@ func TestUrlSetAdd(t *testing.T) {
 
 	err := s.Add(testDup...)
 	if err != nil {
-		t.Fatal("Error: Set Data Structure issue.")
+		t.Fatal(err)
 	}
 
 	if len(s.URLs) != len(test) {
@@ -32,6 +32,6 @@ func TestUrlSetAddShouldFail(t *testing.T) {
 
 	err := s.Add(failTest...)
 	if err == nil {
-		t.Fatal("Error: Set Data Structure issue.")
+		t.Fatal(err)
 	}
 }

@@ -17,23 +17,29 @@ func init() {
 	}
 }
 
-func TestResult(t *testing.T) {
+func TestResultShouldFail(t *testing.T) {
 	// Check if method control is working.
 	request := events.APIGatewayProxyRequest{}
-	res, err := Result(request)
-	if err == nil || res.StatusCode != http.StatusMethodNotAllowed {
+	res, _ := Result(request)
+	if res.StatusCode != http.StatusMethodNotAllowed {
 		t.Fatal("Method checking is not working.")
 	}
+}
 
-	request = events.APIGatewayProxyRequest{
+func TestResultForURLs(t *testing.T) {
+	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
-		Body:       `{"urls": [{"url": "https://tools.zeo.org/carbon"}] }`,
+		QueryStringParameters: map[string]string{
+			"type":   "url",
+			"format": "excel",
+		},
+		Body: `{"urls": [{"url": "https://tools.zeo.org/carbon"}] }`,
 	}
 
-	res, err = Result(request)
-	if err != nil {
-		t.Fatal(err)
+	res, _ := Result(request)
+	if res.StatusCode != http.StatusCreated {
+		t.Fatal("Error occur while getting excel file.")
 	}
 
-	fmt.Println(res)
+	fmt.Println(res.Headers)
 }

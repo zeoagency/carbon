@@ -88,19 +88,34 @@ func convertToURL(fullURL string) (URL, error) {
 	result := URL{}
 
 	u, err := neturl.Parse(fullURL)
-	parts := strings.Split(u.Hostname(), ".")
-	if err != nil || u.Scheme == "" || len(parts) < 2 {
+	if err != nil || u.Scheme == "" {
+		return result, errors.New("The input includes non-url(s). Please check your input.")
+	}
+	result.BaseURL, err = ExtractDomain(u.Hostname())
+	if err != nil {
 		return result, errors.New("The input includes non-url(s). Please check your input.")
 	}
 
 	result.FullURL = u.String()
-	result.BaseURL = parts[len(parts)-2] + "." + parts[len(parts)-1]
 	result.Keywords = replaceAnyWithSpace(
 		u.EscapedPath(),
 		"/", "\\", "-", "_", ".", "html", "js", "php", "aspx",
 	)
 
 	return result, nil
+}
+
+func ExtractDomain(hostname string) (string, error) {
+	parts := strings.Split(hostname, ".")
+	if len(parts) < 2 {
+		return "", errors.New("That's not a valid hostname-url.")
+	}
+
+	// TODO: there is an issue.
+	// What will be happend if the url includes country flags?
+	// like: boratanrikulu.dev.tr
+	// Need to fix it1
+	return parts[len(parts)-2] + "." + parts[len(parts)-1], nil
 }
 
 // replaceAnyWithSpace replace all given keys with space.

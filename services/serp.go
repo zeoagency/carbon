@@ -4,22 +4,27 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"gitlab.com/seo.do/zeo-carbon/models"
 )
+
+// URLOptionResponse response for URLs.
+type URLOptionResponse struct {
+	RelatedURLs []string
+	OriginalURL string
+}
 
 // The API response includes this struct as an array for each keywords.
 // So, the real response like this: `map[string][]serpApiResponse{}`
 type serpApiResponse struct {
 	Result struct {
 		Left []struct {
-			Rank  int    `json:"rank"`
 			Title string `json:"title,omitempty"`
 			Type  string `json:"type"`
 			URL   string `json:"url,omitempty"`
@@ -48,21 +53,20 @@ func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, language s
 
 // GetResultFromSerpApiByUsingURLs returns related 3 results for each URLs by talking with SERP API.
 // The result value is a map that's contains 3 URLs for each URLs.
+// It returns success and fail lists.
 // It returns a status code and error message if there is an any issue.
-func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) (map[string][]string, int, error) {
+func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) ([]URLOptionResponse, []string, int, error) {
 	response, status, err := getResultFromSerpApi(urls, language)
 	if err != nil {
-		return nil, status, err
+		return nil, nil, status, err
 	}
 
-	result := parseResponseToMapForURLs(response, urls)
-	return result, http.StatusOK, nil
+	result, fail := parseResponseToMapForURLs(response, urls)
+	return result, fail, http.StatusOK, nil
 }
 
 // getResultFromSerpApi returns SERP Api Response for given data type.
 func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiResponse, int, error) {
-	fmt.Println(kws)
-
 	// Create the request body.
 	rq := serpApiRequest{
 		Keywords:  kws.ToStringSlice(),
@@ -90,15 +94,17 @@ func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiRe
 	req.SetBasicAuth(os.Getenv("SERP_API_USERNAME"), os.Getenv("SERP_API_PASSWORD"))
 
 	// Send the request.
-	c := &http.Client{}
-	res, err := c.Do(req)
-	if err != nil {
-		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues while sending request.")
+	c := &http.Client{
+		Timeout: 30 * time.Second,
 	}
+	res, err := c.Do(req)
 	defer res.Body.Close()
+	if err != nil {
+		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues with SERP API at this moment. Please try later.")
+	}
 
 	if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
-		log.Printf("Error: Unavailable SERP API Service. Status: %d", res.StatusCode)
+		log.Printf("Error: Unavailable SERP API Service.\nStatus: %d\n", res.StatusCode)
 		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues with SERP API at this moment. Please try later.")
 	}
 
@@ -119,8 +125,10 @@ func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiRe
 // parseResponseToMapForURLs converts map[string][]serpApiResponse to map[string][]string.
 // It selects related -organic- 3 URLs for each URLs.
 // It is used to parse response for URLs option.
-func parseResponseToMapForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) map[string][]string {
-	result := map[string][]string{}
+// It returns success and fail lists.
+func parseResponseToMapForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) ([]URLOptionResponse, []string) {
+	success := []URLOptionResponse{}
+	fail := []string{}
 
 	for key, value := range response {
 		for _, rs := range value {
@@ -134,18 +142,28 @@ func parseResponseToMapForURLs(response map[string][]serpApiResponse, urlSet *mo
 
 				urlParsed, err := url.Parse(v.URL)
 				if err != nil {
+					fail = append(fail, urlSet.URLs[key].FullURL)
 					continue
 				}
-				if v.Type == "organic" && urlSet.URLs[key].BaseURL == urlParsed.Hostname() {
+				urlDomain, err := models.ExtractDomain(urlParsed.Hostname())
+				if err != nil {
+					fail = append(fail, urlSet.URLs[key].FullURL)
+					continue
+				}
+
+				if v.Type == "organic" && urlSet.URLs[key].BaseURL == urlDomain {
 					r = append(r, v.URL)
 				}
 			}
 
-			result[key] = r
+			success = append(success, URLOptionResponse{
+				RelatedURLs: r,
+				OriginalURL: urlSet.URLs[key].FullURL,
+			})
 		}
 	}
 
-	return result
+	return success, fail
 }
 
 // parseResponseToMapForURLs converts map[string][]serpApiResponse to map[string]interface{}.

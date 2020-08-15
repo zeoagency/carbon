@@ -42,7 +42,7 @@ The API is served at AWS Lambda.
 	- type `must`  
 	  options: `keyword` or `url`.  
 	- language `must`  
-	  options: all language supported by Google. 
+	  options: all languages supported by Google. 
 - Body:
 	- Raw Data  
 		- As a JSON value,  

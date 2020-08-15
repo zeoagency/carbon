@@ -28,14 +28,14 @@ func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
 		t.Fatal("Error occur while creating URLSet.")
 	}
 
-	result, status, err := GetResultFromSerpApiByUsingURLs(urls, "tr")
+	response, _, status, err := GetResultFromSerpApiByUsingURLs(urls, "tr")
 	if err != nil {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}
 
-	for key, value := range result {
-		fmt.Printf("\n\tKEYWORD: %s\n\tURL:\n", key)
-		for i, url := range value {
+	for _, r := range response {
+		fmt.Printf("\n\tURL: %s\n", r.OriginalURL)
+		for i, url := range r.RelatedURLs {
 			fmt.Printf("\t\t%d - %s\n", i, url)
 		}
 	}
