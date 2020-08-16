@@ -31,6 +31,18 @@ The API is served at AWS Lambda.
 - 2 export options; Excel and Google Sheets.  
 	- Suggested URLs are made bold for URLs options.  
 
+#### Run tests
+
+To run all tests;
+```shell
+go test ./...
+```
+
+To run specific test;
+```shell
+go test ./services -run TestConvertURLResultToExcel -v 
+```
+
 #### Endpoint
 
 **URL:** /
@@ -41,7 +53,7 @@ The API is served at AWS Lambda.
 - Params: 
 	- type `must`  
 	  options: `keyword` or `url`.  
-	- format `must`
+	- format `must`  
 	  options: `excel` or `sheet`.
 	- language `must`  
 	  options: all languages supported by Google. 
