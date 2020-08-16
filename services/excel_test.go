@@ -46,6 +46,42 @@ func TestConvertURLResultToExcel(t *testing.T) {
 	}
 }
 
+func TestConvertKeywordLResultToExcel(t *testing.T) {
+	// Get the result.
+	keywordSet := models.NewKeywordSet()
+	keywordSet.Add(
+		"boratanrikulu blog archlinux install guide",
+		"boratanrikulu blog postgresql nedir",
+		"googlebunubulamaz blog",
+	)
+	_, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr")
+	if err != nil {
+		t.Fatal("Error occur while getting the result:", err)
+	}
+
+	f, err := ConvertKeywordResultToExcel(keywordSet)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	eF, err := excelize.OpenReader(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println("### SUCCESS SHEET ###")
+	err = printSheet(eF, "success")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println("### FAIL SHEET ###")
+	err = printSheet(eF, "fail")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // printSheet prints the sheet of the given excel.
 func printSheet(f *excelize.File, sheet string) error {
 	rows, err := f.GetRows(sheet)

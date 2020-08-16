@@ -33,7 +33,25 @@ func TestResultForURLs(t *testing.T) {
 			"type":   "url",
 			"format": "excel",
 		},
-		Body: `{"urls": [{"url": "https://tools.zeo.org/carbon"}] }`,
+		Body: `{"values": [{"value": "https://tools.zeo.org/carbon"}] }`,
+	}
+
+	res, _ := Result(request)
+	if res.StatusCode != http.StatusCreated {
+		t.Fatal("Error occur while getting excel file.")
+	}
+
+	fmt.Println(res.Headers)
+}
+
+func TestResultForKeywords(t *testing.T) {
+	request := events.APIGatewayProxyRequest{
+		HTTPMethod: "POST",
+		QueryStringParameters: map[string]string{
+			"type":   "keyword",
+			"format": "excel",
+		},
+		Body: `{"values": [{"value": "zeo carbon tool"}] }`,
 	}
 
 	res, _ := Result(request)

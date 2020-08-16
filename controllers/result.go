@@ -16,9 +16,9 @@ import (
 
 // requestBody keeps request body.
 type requestBody struct {
-	Urls []struct {
-		URL string `json:"url"`
-	} `json:"urls"`
+	Values []struct {
+		Value string `json:"value"`
+	} `json:"values"`
 }
 
 // Result works like router.
@@ -36,82 +36,63 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 	}
 
 	// Process the request.
-	switch rType {
-	case "url":
-		switch format {
-		case "excel":
-			f, status, err := getExcelResultForURLs(request)
-			if err != nil {
-				return events.APIGatewayProxyResponse{
-					StatusCode: status,
-					Body:       `{ "error": "` + err.Error() + `" }`,
-				}, nil
-			}
-
-			// Serve the result.
-			return serveFile(f), nil
-		case "sheet":
-			return events.APIGatewayProxyResponse{
-				StatusCode: http.StatusServiceUnavailable,
-				Body:       `{ "error": "` + "Sheet format is not available yet. Please try later." + `" }`,
-			}, nil
-		default:
-			return events.APIGatewayProxyResponse{
-				StatusCode: http.StatusBadRequest,
-				Body:       `{ "error": "` + "Format must be \"excel\" or \"sheet\"." + `" }`,
-			}, nil
-		}
-	case "keyword":
-		switch format {
-		case "excel":
-			f, status, err := getExcelResultForKeywords(request)
-			if err != nil {
-				return events.APIGatewayProxyResponse{
-					StatusCode: status,
-					Body:       `{ "error": "` + err.Error() + `" }`,
-				}, nil
-			}
-
-			// Serve the result.
-			return serveFile(f), nil
-		case "sheet":
-			return events.APIGatewayProxyResponse{
-				StatusCode: http.StatusServiceUnavailable,
-				Body:       `{ "error": "` + "Sheet format is not available yet. Please try later." + `" }`,
-			}, nil
-		default:
-			return events.APIGatewayProxyResponse{
-				StatusCode: http.StatusBadRequest,
-				Body:       `{ "error": "` + "Format must be \"excel\" or \"sheet\"." + `" }`,
-			}, nil
-		}
-	default:
+	f, status, err := getResult(request, rType, format)
+	if err != nil {
 		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-			Body:       `{ "error": "` + "Type must be \"url\" or \"keyword\"." + `" }`,
+			StatusCode: status,
+			Body:       `{ "error": "` + err.Error() + `" }`,
 		}, nil
 	}
 
+	// Serve the result.
+	return serveFile(f), nil
 }
 
-// getExcelResultForURLs returns excel file for the given request.
-func getExcelResultForURLs(request events.APIGatewayProxyRequest) (*bytes.Buffer, int, error) {
+// getResult returns the result by evaluating the option inputs.
+func getResult(request events.APIGatewayProxyRequest, rType string, format string) (*bytes.Buffer, int, error) {
 	// Unmarshal the json request.
-	var br requestBody
-	err := json.Unmarshal([]byte(request.Body), &br)
+	var rBody requestBody
+	err := json.Unmarshal([]byte(request.Body), &rBody)
 	if err != nil {
 		return nil, http.StatusBadRequest, errors.New("Error occur while unmarshalling body-json value. Check your request.")
 	}
 
 	// Check the count.
-	if len(br.Urls) > 100 {
+	if len(rBody.Values) > 100 {
 		return nil, http.StatusBadRequest, errors.New("You have more than 100 URLs.")
 	}
 
+	switch rType {
+	case "url":
+		switch format {
+		case "excel":
+			return getExcelResultForURLs(request, rBody)
+		case "sheet":
+			return nil, http.StatusServiceUnavailable, errors.New("Sheet format is not available yet.")
+		default:
+			return nil, http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
+		}
+
+	case "keyword":
+		switch format {
+		case "excel":
+			return getExcelResultForKeywords(request, rBody)
+		case "sheet":
+			return nil, http.StatusServiceUnavailable, errors.New("Sheet format is not available yet.")
+		default:
+			return nil, http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
+		}
+	default:
+		return nil, http.StatusBadRequest, errors.New("Type must be \"url\" or \"keyword\".")
+	}
+}
+
+// getExcelResultForURLs returns excel file for the given request.
+func getExcelResultForURLs(request events.APIGatewayProxyRequest, rBody requestBody) (*bytes.Buffer, int, error) {
 	// Create a new Set with inputs.
 	urlSet := models.NewURLSet()
-	for _, v := range br.Urls {
-		urlSet.Add(v.URL)
+	for _, v := range rBody.Values {
+		urlSet.Add(v.Value)
 	}
 
 	// Get the result
@@ -130,8 +111,26 @@ func getExcelResultForURLs(request events.APIGatewayProxyRequest) (*bytes.Buffer
 }
 
 // getExcelResultForKeywords returns excel file for the given request.
-func getExcelResultForKeywords(request events.APIGatewayProxyRequest) (*bytes.Buffer, int, error) {
-	return nil, http.StatusServiceUnavailable, errors.New("Keyword endpoint is not available yet. Please try later.")
+func getExcelResultForKeywords(request events.APIGatewayProxyRequest, rBody requestBody) (*bytes.Buffer, int, error) {
+	// Create a new Set with inputs.
+	keywordSet := models.NewKeywordSet()
+	for _, v := range rBody.Values {
+		keywordSet.Add(v.Value)
+	}
+
+	// Get the result
+	status, err := services.GetResultFromSerpApiByUsingKeywords(keywordSet, "tr")
+	if err != nil {
+		return nil, status, err
+	}
+
+	// Convert the result to excel.
+	f, err := services.ConvertKeywordResultToExcel(keywordSet)
+	if err != nil {
+		return nil, http.StatusInternalServerError, errors.New("We have some issue while creating the excel output. Please try later.")
+	}
+
+	return f, http.StatusCreated, nil
 }
 
 // checkAndGetParams checks the params are set or not.

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"gitlab.com/seo.do/zeo-carbon/helpers"
@@ -19,9 +20,10 @@ import (
 type serpApiResponse struct {
 	Result struct {
 		Left []struct {
-			Title string `json:"title,omitempty"`
-			Type  string `json:"type"`
-			URL   string `json:"url,omitempty"`
+			Title   string `json:"title,omitempty"`
+			Type    string `json:"type"`
+			URL     string `json:"url,omitempty"`
+			Snippet string `json:"snippet"`
 		} `json:"left"`
 	} `json:"result"`
 }
@@ -41,13 +43,19 @@ type keywords interface {
 }
 
 // GetResultFromSerpApiByUsingKeywords returns related 10 results for each Keywords by talking with SEPR API.
-func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, language string) {
-	// TODO...
+func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, language string) (int, error) {
+	response, status, err := getResultFromSerpApi(keywords, language, 20)
+	if err != nil {
+		return status, err
+	}
+
+	parseResponseToFieldsForKeywords(response, keywords)
+	return http.StatusOK, nil
 }
 
 // GetResultFromSerpApiByUsingURLs add the result to the given URLSet by talking the Serp API.
 func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) (int, error) {
-	response, status, err := getResultFromSerpApi(urls, language)
+	response, status, err := getResultFromSerpApi(urls, language, 10)
 	if err != nil {
 		return status, err
 	}
@@ -57,13 +65,13 @@ func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) (int,
 }
 
 // getResultFromSerpApi returns SERP API Response for given data type.
-func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiResponse, int, error) {
+func getResultFromSerpApi(kws keywords, language string, serpLimit int) (map[string][]serpApiResponse, int, error) {
 	// Create the request body.
 	rq := serpApiRequest{
 		Keywords:  kws.ToStringSlice(),
 		Gl:        language,
 		Hl:        language,
-		SerpLimit: "10",
+		SerpLimit: strconv.Itoa(serpLimit),
 		Device:    "desktop",
 	}
 
@@ -121,7 +129,6 @@ func parseResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet 
 		originalURL := url.FullURL
 		r := []string{}
 		for _, value := range response[url.String()] {
-
 			for _, v := range value.Result.Left {
 				// Stop adding if there is already 3 URLs.
 				if len(r) == 3 {
@@ -150,5 +157,29 @@ func parseResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet 
 // It only adds to success list when the value is valid.
 // If it couldn't find any results, it adds to the fail list.
 func parseResponseToFieldsForKeywords(response map[string][]serpApiResponse, keywordSet *models.KeywordSet) {
-	// TODO...
+	for keyword, _ := range keywordSet.Keywords {
+		r := []models.KeywordSuccessResult{}
+		for _, value := range response[keyword] {
+			for _, v := range value.Result.Left {
+				// Stop adding if there is already 10 results.
+				if len(r) == 10 {
+					break
+				}
+
+				if v.Type == "organic" && v.URL != "" {
+					r = append(r, models.KeywordSuccessResult{
+						Title: v.Title,
+						Desc:  v.Snippet,
+						URL:   v.URL,
+					})
+				}
+			}
+		}
+		// Add results to the lists.
+		if len(r) != 0 {
+			keywordSet.AddSuccess(keyword, r)
+		} else {
+			keywordSet.AddFail(keyword, "We could not find any result.")
+		}
+	}
 }

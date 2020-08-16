@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	"gitlab.com/seo.do/zeo-carbon/helpers"
 )
 
@@ -20,17 +22,17 @@ import (
 // You can access by using string output,
 // like that: s.URLs["boratanrikulu.dev postgresql nedir nasil calisir"].BaseURL
 type URLSet struct {
-	URLs      map[string]url     // the key is url.String() (BaseURL + Keywords).
-	Successes map[string]success // the key is the Original URL.
-	Fails     map[string]fail    // the key is the Original URL.
+	URLs      map[string]url        // the key is url.String() (BaseURL + Keywords).
+	Successes map[string]urlSuccess // the key is the Original URL.
+	Fails     map[string]urlFail    // the key is the Original URL.
 }
 
 // NewURLSet inits the URLSet to use.
 func NewURLSet() *URLSet {
 	var s URLSet
 	s.URLs = make(map[string]url)
-	s.Successes = make(map[string]success)
-	s.Fails = make(map[string]fail)
+	s.Successes = make(map[string]urlSuccess)
+	s.Fails = make(map[string]urlFail)
 	return &s
 }
 
@@ -41,13 +43,13 @@ type url struct {
 	Keywords string
 }
 
-// urlSucces is used to keep the result.
-type success struct {
+// urlSuccess is used to keep the result.
+type urlSuccess struct {
 	RelatedURLs []string
 }
 
 // urlFail is used to keep urls that could not be processed with a reason.
-type fail struct {
+type urlFail struct {
 	Reason string
 }
 
@@ -57,6 +59,10 @@ type fail struct {
 // If there is an issue with the given URL, It adds it to the fail list with a reason.
 func (s *URLSet) Add(urls ...string) {
 	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if url == "" {
+			continue // If the url is empty, do nothing.
+		}
 		u, err := convertToURL(url)
 		if err != nil {
 			s.AddFail(url, "That's not a URL.")
@@ -78,18 +84,18 @@ func (s *URLSet) AddSuccess(originalURL string, result []string) {
 		return // Return if it is already exists.
 	}
 
-	s.Successes[originalURL] = success{
+	s.Successes[originalURL] = urlSuccess{
 		RelatedURLs: result,
 	}
 }
 
-// AddFail adds the that's failed to the fail list with a reason, if it doesn't exist already.
+// AddFail adds the url to the fail list with a reason, if it doesn't exist already.
 func (s *URLSet) AddFail(originalURL string, reason string) {
 	if _, ok := s.Fails[originalURL]; ok {
 		return // Return if it is already exists.
 	}
 
-	s.Fails[originalURL] = fail{
+	s.Fails[originalURL] = urlFail{
 		Reason: reason,
 	}
 }

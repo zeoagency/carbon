@@ -30,10 +30,31 @@ func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}
 
-	for originalURL, relatedURLs := range urlSet.Successes {
+	for originalURL, success := range urlSet.Successes {
 		fmt.Printf("\n\tURL: %s\n", originalURL)
-		for i, url := range relatedURLs.RelatedURLs {
+		for i, url := range success.RelatedURLs {
 			fmt.Printf("\t\t%d - %s\n", i, url)
+		}
+	}
+}
+
+func TestGetResultFromSerpApiByUsingKeywords(t *testing.T) {
+	keywordSet := models.NewKeywordSet()
+
+	keywordSet.Add(
+		"boratanrikulu blog postgresql nedir nasil calisir",
+		"boratanrikulu blog smtp nasil calisir",
+	)
+
+	status, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr")
+	if err != nil {
+		t.Fatalf("STATUS: %d ERROR: %s", status, err)
+	}
+
+	for keyword, success := range keywordSet.Successes {
+		fmt.Printf("\n\tURL: %s\n", keyword)
+		for i, result := range success.Results {
+			fmt.Printf("\t\t%d - %s\n", i, result)
 		}
 	}
 }
