@@ -111,20 +111,17 @@ func getExcelResultForURLs(request events.APIGatewayProxyRequest) (*bytes.Buffer
 	// Create a new Set with inputs.
 	urlSet := models.NewURLSet()
 	for _, v := range br.Urls {
-		err := urlSet.Add(v.URL)
-		if err != nil {
-			return nil, http.StatusBadRequest, err
-		}
+		urlSet.Add(v.URL)
 	}
 
 	// Get the result
-	success, fail, status, err := services.GetResultFromSerpApiByUsingURLs(urlSet, "tr")
+	status, err := services.GetResultFromSerpApiByUsingURLs(urlSet, "tr")
 	if err != nil {
 		return nil, status, err
 	}
 
 	// Convert the result to excel.
-	f, err := services.ConvertURLResultToExcel(success, fail)
+	f, err := services.ConvertURLResultToExcel(urlSet)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.New("We have some issue while creating the excel output. Please try later.")
 	}

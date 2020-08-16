@@ -41,6 +41,8 @@ The API is served at AWS Lambda.
 - Params: 
 	- type `must`  
 	  options: `keyword` or `url`.  
+	- format `must`
+	  options: `excel` or `sheet`.
 	- language `must`  
 	  options: all languages supported by Google. 
 - Body:

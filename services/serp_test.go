@@ -18,24 +18,21 @@ func init() {
 }
 
 func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
-	urls := models.NewURLSet()
+	urlSet := models.NewURLSet()
 
-	err := urls.Add(
+	urlSet.Add(
 		"https://boratanrikulu.dev/postgresql-nedir-nasil-calisir/",
 		"https://boratanrikulu.dev/smtp-nasil-calisir-ve-postfix-kurulumu/",
 	)
-	if err != nil {
-		t.Fatal("Error occur while creating URLSet.")
-	}
 
-	response, _, status, err := GetResultFromSerpApiByUsingURLs(urls, "tr")
+	status, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr")
 	if err != nil {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}
 
-	for _, r := range response {
-		fmt.Printf("\n\tURL: %s\n", r.OriginalURL)
-		for i, url := range r.RelatedURLs {
+	for originalURL, relatedURLs := range urlSet.Successes {
+		fmt.Printf("\n\tURL: %s\n", originalURL)
+		for i, url := range relatedURLs.RelatedURLs {
 			fmt.Printf("\t\t%d - %s\n", i, url)
 		}
 	}

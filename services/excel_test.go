@@ -11,17 +11,19 @@ import (
 
 func TestConvertURLResultToExcel(t *testing.T) {
 	// Get the result.
-	urls := models.NewURLSet()
-	_ = urls.Add(
+	urlSet := models.NewURLSet()
+	urlSet.Add(
 		"https://boratanrikulu.dev/archlinux-install",
 		"https://boratanrikulu.dev/postgresql-nedir",
+		"https://googlebunubulamaz.com/",
+		"notaavalidurl",
 	)
-	result, fail, _, err := GetResultFromSerpApiByUsingURLs(urls, "tr")
+	_, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
 
-	f, err := ConvertURLResultToExcel(result, fail)
+	f, err := ConvertURLResultToExcel(urlSet)
 	if err != nil {
 		t.Fatal(err)
 	}

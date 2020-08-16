@@ -10,14 +10,9 @@ import (
 	"os"
 	"time"
 
+	"gitlab.com/seo.do/zeo-carbon/helpers"
 	"gitlab.com/seo.do/zeo-carbon/models"
 )
-
-// URLOptionResponse response for URLs.
-type URLOptionResponse struct {
-	RelatedURLs []string
-	OriginalURL string
-}
 
 // The API response includes this struct as an array for each keywords.
 // So, the real response like this: `map[string][]serpApiResponse{}`
@@ -50,21 +45,18 @@ func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, language s
 	// TODO...
 }
 
-// GetResultFromSerpApiByUsingURLs returns related 3 results for each URLs by talking with SERP API.
-// The result value is a map that's contains 3 URLs for each URLs.
-// It returns success and fail lists.
-// It returns a status code and error message if there is an any issue.
-func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) ([]URLOptionResponse, []string, int, error) {
+// GetResultFromSerpApiByUsingURLs add the result to the given URLSet by talking the Serp API.
+func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) (int, error) {
 	response, status, err := getResultFromSerpApi(urls, language)
 	if err != nil {
-		return nil, nil, status, err
+		return status, err
 	}
 
-	result, fail := parseResponseToMapForURLs(response, urls)
-	return result, fail, http.StatusOK, nil
+	parseResponseToFieldsForURLs(response, urls)
+	return http.StatusOK, nil
 }
 
-// getResultFromSerpApi returns SERP Api Response for given data type.
+// getResultFromSerpApi returns SERP API Response for given data type.
 func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiResponse, int, error) {
 	// Create the request body.
 	rq := serpApiRequest{
@@ -121,50 +113,42 @@ func getResultFromSerpApi(kws keywords, language string) (map[string][]serpApiRe
 	return rs, http.StatusOK, nil
 }
 
-// parseResponseToMapForURLs converts map[string][]serpApiResponse to map[string][]string.
-// It selects related -organic- 3 URLs for each URLs.
-// It is used to parse response for URLs option.
-// It returns success and fail lists.
-func parseResponseToMapForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) ([]URLOptionResponse, []string) {
-	success := []URLOptionResponse{}
-	fail := []string{}
+// parseResponseToFieldsForURLs extract the response to the URLSet.
+// It only adds to success list when domains are matched.
+// If it couldn't find any related URLs, it adds to the fail list.
+func parseResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) {
+	for _, url := range urlSet.URLs {
+		originalURL := url.FullURL
+		r := []string{}
+		for _, value := range response[url.String()] {
 
-	for key, value := range response {
-		for _, rs := range value {
-			r := []string{}
-
-			for _, v := range rs.Result.Left {
+			for _, v := range value.Result.Left {
 				// Stop adding if there is already 3 URLs.
 				if len(r) == 3 {
 					break
 				}
 
-				urlDomain, _, err := models.ExtractURL(v.URL)
+				urlDomain, _, err := helpers.ExtractURL(v.URL)
 				if err != nil {
-					fail = append(fail, urlSet.URLs[key].FullURL)
-					continue
+					continue // The result's URL is not a valid URL.
 				}
-
-				if v.Type == "organic" && urlSet.URLs[key].BaseURL == urlDomain {
+				if v.Type == "organic" && url.BaseURL == urlDomain {
 					r = append(r, v.URL)
 				}
 			}
-
-			success = append(success, URLOptionResponse{
-				RelatedURLs: r,
-				OriginalURL: urlSet.URLs[key].FullURL,
-			})
+		}
+		// Add results to the lists.
+		if len(r) != 0 {
+			urlSet.AddSuccess(originalURL, r)
+		} else {
+			urlSet.AddFail(originalURL, "We could not find any related URLs.")
 		}
 	}
-
-	return success, fail
 }
 
-// parseResponseToMapForURLs converts map[string][]serpApiResponse to map[string]interface{}.
-// It selects related -organic- 10 URLs for each keywords.
-// It is used to parse response for Keywords option.
-// The interface may include: Title, Desc and URL.
-func parseResponseToMapForKeywords(response map[string][]serpApiResponse, urlSet *models.URLSet) map[string]interface{} {
+// parseResponseToFieldsForKeywords extract the response to the KeywordSet.
+// It only adds to success list when the value is valid.
+// If it couldn't find any results, it adds to the fail list.
+func parseResponseToFieldsForKeywords(response map[string][]serpApiResponse, keywordSet *models.KeywordSet) {
 	// TODO...
-	return nil
 }
