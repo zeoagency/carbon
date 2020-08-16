@@ -63,12 +63,12 @@ go test ./services -run TestConvertURLResultToExcel -v
 		  For example;
 			```json
 			{
-			    "urls": [
+			    "values": [
 			      {
-			        "url": "https://tools.zeo.org/carbon"
+			        "value": "https://tools.zeo.org/carbon"
 			      },
 			      {
-			        "url": "https://seo.do/pricing/"
+			        "value": "https://seo.do/pricing/"
 			      },
 			      ...
 			    ]
@@ -77,4 +77,34 @@ go test ./services -run TestConvertURLResultToExcel -v
 
 **Response:**
 
-...
+Status;
+
+- Type: 201
+	- That means the data is created.
+- Type: 400
+	- That means the inputs are not valid.  
+	  Check the error message.
+- Type: 500
+	- That means internal error occurs while creating the data.
+- Type: 503
+	- That means the service is not available.  
+	  Try later.
+
+Header and body;
+
+- For excel;
+	- Header  
+		```
+		Content-Disposition: attachment; filename="seodo-performance-module-change-keywords-report.json"
+		Content-Length: 453646
+		Content-Type: application/json
+		```
+	- Body  
+		`file`
+- For sheet;  
+	- Body  
+		```
+		 {
+		     "sheetURL": "https://docs.google.com/spreadsheets/d/...",
+		 }
+		```

@@ -3,7 +3,7 @@ package models
 import "strings"
 
 // KeywordSet is kind a Set Data Structure implementation.
-// It has an Add method that only works if the Keyword is doesn't exist already.
+// It has an Add method that only works if the Keyword doesn't exist already.
 //
 // When you use it, firstly create with NewKeywordSet method.
 // Example:
