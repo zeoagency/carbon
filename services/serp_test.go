@@ -32,8 +32,9 @@ func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
 
 	for originalURL, success := range urlSet.Successes {
 		fmt.Printf("\n\tURL: %s\n", originalURL)
-		for i, url := range success.RelatedURLs {
+		for i, url := range success.URLs {
 			fmt.Printf("\t\t%d - %s\n", i, url)
+			fmt.Printf("\t\tSUGGESTED: %s\n", success.SuggestedURL)
 		}
 	}
 }

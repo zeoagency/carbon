@@ -79,8 +79,12 @@ func createSuccessSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 		if err != nil {
 			return err
 		}
-		for i, url := range success.RelatedURLs {
+		for i, url := range success.URLs {
 			err := f.SetCellValue("success", fmt.Sprintf("%s%d", letters[i+1], count), url)
+			if err != nil {
+				return err
+			}
+			err = f.SetCellValue("success", fmt.Sprintf("%s%d", letters[len(letters)-1], count), success.SuggestedURL)
 			if err != nil {
 				return err
 			}

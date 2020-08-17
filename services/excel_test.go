@@ -10,7 +10,6 @@ import (
 )
 
 func TestConvertURLResultToExcel(t *testing.T) {
-	// Get the result.
 	urlSet := models.NewURLSet()
 	urlSet.Add(
 		"https://boratanrikulu.dev/archlinux-install",
@@ -46,8 +45,7 @@ func TestConvertURLResultToExcel(t *testing.T) {
 	}
 }
 
-func TestConvertKeywordLResultToExcel(t *testing.T) {
-	// Get the result.
+func TestConvertKeywordResultToExcel(t *testing.T) {
 	keywordSet := models.NewKeywordSet()
 	keywordSet.Add(
 		"boratanrikulu blog archlinux install guide",

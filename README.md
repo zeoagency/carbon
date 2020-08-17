@@ -9,6 +9,8 @@ The API is served at AWS Lambda.
 #### Requirements
 
 - SERP API Credantials. (to access credantials contact with [**zeo.org**](https://zeo.org/contact-us/))
+- Google Credantials. (have to enabled Drive API V3 on the account)
+- Google Access Token. (to access to Google Drive as an user)
 - Go v1.15
 
 #### How to set up

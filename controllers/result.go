@@ -36,7 +36,7 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 	}
 
 	// Process the request.
-	f, status, err := getResult(request, rType, format)
+	f, sheetURL, status, err := getResult(request, rType, format)
 	if err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: status,
@@ -44,51 +44,63 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 		}, nil
 	}
 
-	// Serve the result.
-	return serveFile(f), nil
+	if f != nil {
+		// If the return value is a file, serve it.
+		return serveFile(f), nil
+	} else {
+		// If the return value is not a file, then it must be a sheetURL.
+		return events.APIGatewayProxyResponse{
+			StatusCode: status,
+			Body:       `{ "sheetURL": "` + sheetURL + `" }`,
+		}, nil
+	}
 }
 
 // getResult returns the result by evaluating the option inputs.
-func getResult(request events.APIGatewayProxyRequest, rType string, format string) (*bytes.Buffer, int, error) {
+func getResult(request events.APIGatewayProxyRequest, rType string, format string) (*bytes.Buffer, string, int, error) {
 	// Unmarshal the json request.
 	var rBody requestBody
 	err := json.Unmarshal([]byte(request.Body), &rBody)
 	if err != nil {
-		return nil, http.StatusBadRequest, errors.New("Error occur while unmarshalling body-json value. Check your request.")
+		return nil, "", http.StatusBadRequest, errors.New("Error occur while unmarshalling body-json value. Check your request.")
 	}
 
 	// Check the count.
 	if len(rBody.Values) > 100 {
-		return nil, http.StatusBadRequest, errors.New("You have more than 100 URLs.")
+		return nil, "", http.StatusBadRequest, errors.New("You have more than 100 URLs.")
 	}
 
 	switch rType {
 	case "url":
 		switch format {
 		case "excel":
-			return getExcelResultForURLs(request, rBody)
+			f, status, err := getExcelResultForURLs(rBody)
+			return f, "", status, err
 		case "sheet":
-			return nil, http.StatusServiceUnavailable, errors.New("Sheet format is not available yet.")
+			sheetURL, status, err := getSheetResultForURLs(rBody)
+			return nil, sheetURL, status, err
 		default:
-			return nil, http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
+			return nil, "", http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
 		}
 
 	case "keyword":
 		switch format {
 		case "excel":
-			return getExcelResultForKeywords(request, rBody)
+			f, status, err := getExcelResultForKeywords(rBody)
+			return f, "", status, err
 		case "sheet":
-			return nil, http.StatusServiceUnavailable, errors.New("Sheet format is not available yet.")
+			sheetURL, status, err := getSheetResultForKeywords(rBody)
+			return nil, sheetURL, status, err
 		default:
-			return nil, http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
+			return nil, "", http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
 		}
 	default:
-		return nil, http.StatusBadRequest, errors.New("Type must be \"url\" or \"keyword\".")
+		return nil, "", http.StatusBadRequest, errors.New("Type must be \"url\" or \"keyword\".")
 	}
 }
 
 // getExcelResultForURLs returns excel file for the given request.
-func getExcelResultForURLs(request events.APIGatewayProxyRequest, rBody requestBody) (*bytes.Buffer, int, error) {
+func getExcelResultForURLs(rBody requestBody) (*bytes.Buffer, int, error) {
 	// Create a new Set with inputs.
 	urlSet := models.NewURLSet()
 	for _, v := range rBody.Values {
@@ -110,8 +122,21 @@ func getExcelResultForURLs(request events.APIGatewayProxyRequest, rBody requestB
 	return f, http.StatusCreated, nil
 }
 
+// getSheetResultForURLs returns sheet url for the given request.
+func getSheetResultForURLs(rBody requestBody) (string, int, error) {
+	f, status, err := getExcelResultForURLs(rBody)
+	if err != nil {
+		return "", status, err
+	}
+	sheetURL, err := services.ImportFileToGoogleSheets(f)
+	if err != nil {
+		return "", http.StatusInternalServerError, errors.New("We're having some troubles with Google Sheets.")
+	}
+	return sheetURL, http.StatusCreated, nil
+}
+
 // getExcelResultForKeywords returns excel file for the given request.
-func getExcelResultForKeywords(request events.APIGatewayProxyRequest, rBody requestBody) (*bytes.Buffer, int, error) {
+func getExcelResultForKeywords(rBody requestBody) (*bytes.Buffer, int, error) {
 	// Create a new Set with inputs.
 	keywordSet := models.NewKeywordSet()
 	for _, v := range rBody.Values {
@@ -131,6 +156,19 @@ func getExcelResultForKeywords(request events.APIGatewayProxyRequest, rBody requ
 	}
 
 	return f, http.StatusCreated, nil
+}
+
+// getSheetResultForKeywords returns sheet url for the given request.
+func getSheetResultForKeywords(rBody requestBody) (string, int, error) {
+	f, status, err := getExcelResultForKeywords(rBody)
+	if err != nil {
+		return "", status, err
+	}
+	sheetURL, err := services.ImportFileToGoogleSheets(f)
+	if err != nil {
+		return "", http.StatusInternalServerError, errors.New("We're having some troubles with Google Sheets.")
+	}
+	return sheetURL, http.StatusCreated, nil
 }
 
 // checkAndGetParams checks the params are set or not.

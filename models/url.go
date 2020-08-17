@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"gitlab.com/seo.do/zeo-carbon/helpers"
+
+	"github.com/schollz/closestmatch"
 )
 
 // URLSet is kind a Set Data Structure implementation.
@@ -45,7 +47,8 @@ type url struct {
 
 // urlSuccess is used to keep the result.
 type urlSuccess struct {
-	RelatedURLs []string
+	URLs         []string
+	SuggestedURL string
 }
 
 // urlFail is used to keep urls that could not be processed with a reason.
@@ -84,8 +87,10 @@ func (s *URLSet) AddSuccess(originalURL string, result []string) {
 		return // Return if it is already exists.
 	}
 
+	c := closestmatch.New(result, []int{2})
 	s.Successes[originalURL] = urlSuccess{
-		RelatedURLs: result,
+		URLs:         result,
+		SuggestedURL: c.Closest(originalURL),
 	}
 }
 
