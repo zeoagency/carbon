@@ -10,12 +10,12 @@ func ReplaceAnyWithSpace(s string, keys ...string) string {
 	return strings.TrimSpace(s)
 }
 
-// StringContains tells whether a contains x.
-func StringContains(a []string, x string) bool {
-	for _, n := range a {
+// StringSliceContains tells whether a contains x.
+func StringSliceContains(a []string, x string) (int, bool) {
+	for i, n := range a {
 		if x == n {
-			return true
+			return i, true
 		}
 	}
-	return false
+	return -1, false
 }

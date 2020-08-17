@@ -17,13 +17,14 @@ func init() {
 	}
 }
 
-func TestImportFileToGoogleSheets(t *testing.T) {
+func TestImportURLFileToGoogleSheets(t *testing.T) {
 	urlSet := models.NewURLSet()
 	urlSet.Add(
-		"https://boratanrikulu.dev/archlinux-install",
-		"https://boratanrikulu.dev/postgresql-nedir",
+		"https://tools.zeo.org/carbon",
 		"https://googlebunubulamaz.com/",
 		"notaavalidurl",
+		"https://boratanrikulu.dev/postgresql-nedir-nasil-calisir/",
+		"https://boratanrikulu.dev/smtp-nasil-calisir-ve-postfix-kurulumu/",
 	)
 
 	_, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr")
@@ -32,6 +33,32 @@ func TestImportFileToGoogleSheets(t *testing.T) {
 	}
 
 	f, err := ConvertURLResultToExcel(urlSet)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sheetURL, err := ImportFileToGoogleSheets(f)
+	if err != nil {
+		t.Fatalf("Test failed: %s", err)
+	}
+
+	fmt.Println(sheetURL)
+}
+
+func TestImportKeywordFileToGoogleSheets(t *testing.T) {
+	keywordSet := models.NewKeywordSet()
+	keywordSet.Add(
+		"boratanrikulu blog archlinux install guide",
+		"boratanrikulu blog postgresql nedir",
+		"googlebunubulamaz blog",
+	)
+
+	_, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr")
+	if err != nil {
+		t.Fatal("Error occur while getting the result:", err)
+	}
+
+	f, err := ConvertKeywordResultToExcel(keywordSet)
 	if err != nil {
 		t.Fatal(err)
 	}

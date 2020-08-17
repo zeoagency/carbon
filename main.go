@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/joho/godotenv"
 
@@ -10,10 +8,7 @@ import (
 )
 
 func init() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	_ = godotenv.Load(".env")
 }
 
 func main() {

@@ -68,7 +68,7 @@ func (s *URLSet) Add(urls ...string) {
 		}
 		u, err := convertToURL(url)
 		if err != nil {
-			s.AddFail(url, "That's not a URL.")
+			s.AddFail(url, "That's not an URL.")
 			continue
 		}
 

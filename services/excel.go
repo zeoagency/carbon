@@ -6,8 +6,11 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 
+	"gitlab.com/seo.do/zeo-carbon/helpers"
 	"gitlab.com/seo.do/zeo-carbon/models"
 )
+
+var titleStyle = `{"alignment":{"horizontal":"center", "vertical":"center"}, "font":{"size":12, "name":"Calibri", "bold":true, "color":"#ffffff"}, "fill":{"type":"pattern", "color":["#000000"], "pattern":1}}`
 
 // ConvertURLResultToExcel creates a excel file by using the URLSet.
 func ConvertURLResultToExcel(urlSet *models.URLSet) (*bytes.Buffer, error) {
@@ -65,12 +68,27 @@ func createSuccessSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 	titles := []string{"URL", "Alternative 1", "Alternative 2", "Alternative 3", "Suggested"}
 	// NOTE: letters and titles sizes must be same!
 
+	// Set styles
+	err := f.SetColWidth("success", "A", "E", 40)
+	if err != nil {
+		return err
+	}
+	style, err := f.NewStyle(titleStyle)
+	if err != nil {
+		return err
+	}
+	err = f.SetCellStyle("success", "A1", "E1", style)
+	if err != nil {
+		return err
+	}
+
 	// Set titles.
 	for i, letter := range letters {
 		err := f.SetCellValue("success", fmt.Sprintf("%s%d", letter, 1), titles[i])
 		if err != nil {
 			return err
 		}
+
 	}
 
 	count := 2
@@ -88,8 +106,27 @@ func createSuccessSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 			if err != nil {
 				return err
 			}
+			index, _ := helpers.StringSliceContains(success.URLs, success.SuggestedURL)
+			if index != -1 {
+				style, err := f.NewStyle(`{"font":{"bold":true}}`)
+				if err != nil {
+					return err
+				}
+				f.SetCellStyle("success", fmt.Sprintf("%s%d", letters[index+1], count), fmt.Sprintf("%s%d", letters[index+1], count), style)
+			}
 		}
 		count++
+	}
+
+	if count > 2 {
+		style, err = f.NewStyle(`{"fill":{"type":"pattern", "color":["#d5eb81"], "pattern":1}}`)
+		if err != nil {
+			return err
+		}
+		err = f.SetCellStyle("success", "E2", fmt.Sprintf("E%d", count-1), style)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -107,6 +144,20 @@ func createFailSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	// Set styles
+	err := f.SetColWidth("fail", "A", "B", 40)
+	if err != nil {
+		return err
+	}
+	style, err := f.NewStyle(titleStyle)
+	if err != nil {
+		return err
+	}
+	err = f.SetCellStyle("fail", "A1", "B1", style)
+	if err != nil {
+		return err
 	}
 
 	count := 2
@@ -127,8 +178,8 @@ func createFailSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 
 // createSuccessSheetForKeywords creates success sheet for the given excel.
 func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordSet) error {
-	letters := []string{"A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L"}
-	titles := []string{"URL", "# 1", "# 2", "# 3", "# 4", "# 5", "# 6", "# 7", "# 8", "# 9", "# 10"}
+	letters := []string{"A", "B", "C", "D", "E"}
+	titles := []string{"URL", "Position", "Title", "URL", "Description"}
 	// NOTE: letters and titles sizes must be same!
 
 	// Set titles.
@@ -139,6 +190,22 @@ func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordS
 		}
 	}
 
+	// Set styles
+	err := f.SetColWidth("success", "A", "A", 40)
+	_ = f.SetColWidth("success", "C", "D", 40)
+	_ = f.SetColWidth("success", "E", "E", 100)
+	if err != nil {
+		return err
+	}
+	style, err := f.NewStyle(titleStyle)
+	if err != nil {
+		return err
+	}
+	err = f.SetCellStyle("success", "A1", "E1", style)
+	if err != nil {
+		return err
+	}
+
 	count := 2
 	for keyword, success := range keywordSet.Successes {
 		err := f.SetCellValue("success", fmt.Sprintf("%s%d", letters[0], count), keyword)
@@ -146,15 +213,24 @@ func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordS
 			return err
 		}
 		for i, result := range success.Results {
-			err := f.SetCellValue("success", fmt.Sprintf("%s%d", letters[i+1], count),
-				fmt.Sprintf("Title: %s - Desc: %s - URL: %s",
-					result.Title, result.Desc, result.URL,
-				))
+			err := f.SetCellValue("success", fmt.Sprintf("%s%d", letters[1], count), fmt.Sprintf("#%d", i+1))
 			if err != nil {
 				return err
 			}
+			err = f.SetCellValue("success", fmt.Sprintf("%s%d", letters[2], count), result.Title)
+			if err != nil {
+				return err
+			}
+			err = f.SetCellValue("success", fmt.Sprintf("%s%d", letters[3], count), result.URL)
+			if err != nil {
+				return err
+			}
+			err = f.SetCellValue("success", fmt.Sprintf("%s%d", letters[4], count), result.Desc)
+			if err != nil {
+				return err
+			}
+			count++
 		}
-		count++
 	}
 
 	return nil
@@ -172,6 +248,20 @@ func createFailSheetForKeywords(f *excelize.File, keywordSet *models.KeywordSet)
 		if err != nil {
 			return err
 		}
+	}
+
+	// Set styles
+	err := f.SetColWidth("fail", "A", "B", 40)
+	if err != nil {
+		return err
+	}
+	style, err := f.NewStyle(titleStyle)
+	if err != nil {
+		return err
+	}
+	err = f.SetCellStyle("fail", "A1", "B1", style)
+	if err != nil {
+		return err
 	}
 
 	count := 2

@@ -27,7 +27,8 @@ func ExtractURL(url string) (string, string, error) {
 	parts := strings.Split(u.Hostname(), ".")
 
 	count := 2
-	if len(parts) > 2 && StringContains(countryTopLevelDomains, parts[len(parts)-1]) {
+	_, contains := StringSliceContains(countryTopLevelDomains, parts[len(parts)-1])
+	if len(parts) > 2 && contains {
 		// Set count to 3 if it is an url that contains country domain.
 		count = 3
 	}

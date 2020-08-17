@@ -130,7 +130,7 @@ func getSheetResultForURLs(rBody requestBody) (string, int, error) {
 	}
 	sheetURL, err := services.ImportFileToGoogleSheets(f)
 	if err != nil {
-		return "", http.StatusInternalServerError, errors.New("We're having some troubles with Google Sheets.")
+		return "", http.StatusInternalServerError, errors.New("We have some issue with Google Sheets. Please try later.")
 	}
 	return sheetURL, http.StatusCreated, nil
 }
@@ -166,7 +166,7 @@ func getSheetResultForKeywords(rBody requestBody) (string, int, error) {
 	}
 	sheetURL, err := services.ImportFileToGoogleSheets(f)
 	if err != nil {
-		return "", http.StatusInternalServerError, errors.New("We're having some troubles with Google Sheets.")
+		return "", http.StatusInternalServerError, errors.New("We have some issue with Google Sheets. Please try later.")
 	}
 	return sheetURL, http.StatusCreated, nil
 }
