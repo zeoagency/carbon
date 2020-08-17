@@ -95,9 +95,9 @@ Header and body;
 - For excel;
 	- Header  
 		```
-		Content-Disposition: attachment; filename="seodo-performance-module-change-keywords-report.json"
+		Content-Disposition: attachment; filename="result.xlsx"
 		Content-Length: 453646
-		Content-Type: application/json
+		Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 		```
 	- Body  
 		`file`
