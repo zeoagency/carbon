@@ -69,7 +69,11 @@ func createSuccessSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 	// NOTE: letters and titles sizes must be same!
 
 	// Set styles
-	err := f.SetColWidth("success", "A", "E", 40)
+	err := f.SetColWidth("success", "A", "D", 40)
+	if err != nil {
+		return err
+	}
+	err = f.SetColWidth("success", "E", "E", 70)
 	if err != nil {
 		return err
 	}
@@ -193,7 +197,7 @@ func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordS
 	// Set styles
 	err := f.SetColWidth("success", "A", "A", 40)
 	_ = f.SetColWidth("success", "C", "D", 40)
-	_ = f.SetColWidth("success", "E", "E", 100)
+	_ = f.SetColWidth("success", "E", "E", 110)
 	if err != nil {
 		return err
 	}
@@ -212,8 +216,24 @@ func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordS
 		if err != nil {
 			return err
 		}
+		groupCount := 0
 		for i, result := range success.Results {
-			err := f.SetCellValue("success", fmt.Sprintf("%s%d", letters[1], count), fmt.Sprintf("#%d", i+1))
+			if groupCount != 0 {
+				location := fmt.Sprintf("%s%d", letters[0], count)
+				err := f.SetCellValue("success", location, keyword)
+				if err != nil {
+					return err
+				}
+				style, err := f.NewStyle(`{"font":{"color":"#cccccc"}}`)
+				if err != nil {
+					return err
+				}
+				err = f.SetCellStyle("success", location, location, style)
+				if err != nil {
+					return err
+				}
+			}
+			err = f.SetCellValue("success", fmt.Sprintf("%s%d", letters[1], count), fmt.Sprintf("#%d", i+1))
 			if err != nil {
 				return err
 			}
@@ -230,6 +250,7 @@ func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordS
 				return err
 			}
 			count++
+			groupCount++
 		}
 	}
 
