@@ -42,8 +42,8 @@ type keywords interface {
 }
 
 // GetResultFromSerpApiByUsingKeywords returns related 10 results for each Keywords by talking with SEPR API.
-func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, language string) (int, error) {
-	response, status, err := getResultFromSerpApi(keywords, language, 20)
+func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, country, language string) (int, error) {
+	response, status, err := getResultFromSerpApi(keywords, country, language, 20)
 	if err != nil {
 		return status, err
 	}
@@ -53,8 +53,8 @@ func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, language s
 }
 
 // GetResultFromSerpApiByUsingURLs add the result to the given URLSet by talking the Serp API.
-func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) (int, error) {
-	response, status, err := getResultFromSerpApi(urls, language, 10)
+func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, country, language string) (int, error) {
+	response, status, err := getResultFromSerpApi(urls, country, language, 10)
 	if err != nil {
 		return status, err
 	}
@@ -64,11 +64,11 @@ func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, language string) (int,
 }
 
 // getResultFromSerpApi returns SERP API Response for given data type.
-func getResultFromSerpApi(kws keywords, language string, serpLimit int) (map[string][]serpApiResponse, int, error) {
+func getResultFromSerpApi(kws keywords, country, language string, serpLimit int) (map[string][]serpApiResponse, int, error) {
 	// Create the request body.
 	rq := serpApiRequest{
 		Keywords:  kws.ToStringSlice(),
-		Gl:        language,
+		Gl:        country,
 		Hl:        language,
 		SerpLimit: strconv.Itoa(serpLimit),
 		Device:    "desktop",

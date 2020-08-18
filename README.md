@@ -29,9 +29,10 @@ The API is served at AWS Lambda.
 	- Keywords option; finds related 10 URLs.  
 	  The result includes title, desc and url for each input keywords.  
 	  Mostly used for SERP.  
-- Supports language specification for SERP.  
+- Supports country and language specification for SERP.  
 - 2 export options; Excel and Google Sheets.  
 	- Suggested URLs are made bold for URLs options.  
+- Supports internal accounts.
 
 #### Run tests
 
@@ -57,8 +58,12 @@ go test ./services -run TestConvertURLResultToExcel -v
 	  options: `keyword` or `url`.  
 	- format `must`  
 	  options: `excel` or `sheet`.
-	- language `must`  
-	  options: all languages supported by Google. 
+	- country `must`  
+	  options: all countries supported by Google. 
+	- langauge `must`  
+	  options: all languages supported by Google.
+	- accountName  
+	- accountPassword  
 - Body:
 	- Raw Data  
 		- As a JSON value,  
@@ -86,6 +91,8 @@ Status;
 - Type: 400
 	- That means the inputs are not valid.  
 	  Check the error message.
+- Type: 401
+	- That means auth is not successful.
 - Type: 500
 	- That means internal error occurs while creating the data.
 - Type: 503

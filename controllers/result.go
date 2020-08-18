@@ -32,13 +32,15 @@ type internal struct {
 	} `json:"accounts"`
 }
 
+var rType, format, country, language string
+
 // Result works like router.
 //
 // You need to send type and format in the request.
 // You will get a response that is related with request.
 func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	// Get params, returns an error if the param is not set.
-	rType, format, status, err := checkAndGetParams(request)
+	// Set params, returns an error if the param is not set.
+	status, err := checkAndSetParams(request)
 	if err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: status,
@@ -60,7 +62,7 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 	}
 
 	// Process the request.
-	f, sheetURL, status, err := getResult(request, rType, format, isInternal, iLimit)
+	f, sheetURL, status, err := getResult(request, isInternal, iLimit)
 	if err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: status,
@@ -81,7 +83,7 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 }
 
 // getResult returns the result by evaluating the option inputs.
-func getResult(request events.APIGatewayProxyRequest, rType string, format string, isInternal bool, iLimit int) (*bytes.Buffer, string, int, error) {
+func getResult(request events.APIGatewayProxyRequest, isInternal bool, iLimit int) (*bytes.Buffer, string, int, error) {
 	// Unmarshal the json request.
 	var rBody requestBody
 	err := json.Unmarshal([]byte(request.Body), &rBody)
@@ -132,7 +134,7 @@ func getExcelResultForURLs(rBody requestBody) (*bytes.Buffer, int, error) {
 	}
 
 	// Get the result
-	status, err := services.GetResultFromSerpApiByUsingURLs(urlSet, "tr")
+	status, err := services.GetResultFromSerpApiByUsingURLs(urlSet, country, language)
 	if err != nil {
 		return nil, status, err
 	}
@@ -168,7 +170,7 @@ func getExcelResultForKeywords(rBody requestBody) (*bytes.Buffer, int, error) {
 	}
 
 	// Get the result
-	status, err := services.GetResultFromSerpApiByUsingKeywords(keywordSet, "tr")
+	status, err := services.GetResultFromSerpApiByUsingKeywords(keywordSet, country, language)
 	if err != nil {
 		return nil, status, err
 	}
@@ -236,29 +238,43 @@ func checkAndAuthInternal(request events.APIGatewayProxyRequest) (bool, int, int
 }
 
 // checkAndGetParams checks the params are set or not.
-func checkAndGetParams(request events.APIGatewayProxyRequest) (string, string, int, error) {
+func checkAndSetParams(request events.APIGatewayProxyRequest) (int, error) {
 	// Check the method.
 	if request.HTTPMethod != "POST" {
-		return "", "", http.StatusMethodNotAllowed, errors.New("Method not allowed. Only allowed: POST.")
+		return http.StatusMethodNotAllowed, errors.New("Method not allowed. Only allowed: POST.")
 	}
 
-	// Check the type.
-	rType := ""
-	if v, ok := request.QueryStringParameters["type"]; ok {
-		rType = v
+	rrType, err := getParam(request, "type")
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+	rType = rrType
+
+	format, err = getParam(request, "format")
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	country, err = getParam(request, "country")
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	language, err = getParam(request, "language")
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	return http.StatusOK, nil
+}
+
+// getParam returns params if it exists.
+func getParam(request events.APIGatewayProxyRequest, param string) (string, error) {
+	if v, ok := request.QueryStringParameters[param]; ok {
+		return v, nil
 	} else {
-		return "", "", http.StatusBadRequest, errors.New("Type is not set.")
+		return "", fmt.Errorf("%s is not set.", param)
 	}
-
-	// Check the format.
-	format := ""
-	if v, ok := request.QueryStringParameters["format"]; ok {
-		format = v
-	} else {
-		return "", "", http.StatusBadRequest, errors.New("Format is not set.")
-	}
-
-	return rType, format, http.StatusOK, nil
 }
 
 // checkLimit checks limit for the user.

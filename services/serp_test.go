@@ -25,7 +25,7 @@ func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
 		"https://boratanrikulu.dev/smtp-nasil-calisir-ve-postfix-kurulumu/",
 	)
 
-	status, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr")
+	status, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr", "tr")
 	if err != nil {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}
@@ -47,7 +47,7 @@ func TestGetResultFromSerpApiByUsingKeywords(t *testing.T) {
 		"boratanrikulu blog smtp nasil calisir",
 	)
 
-	status, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr")
+	status, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr", "tr")
 	if err != nil {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}

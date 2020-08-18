@@ -32,6 +32,8 @@ func TestExcelResultForURLs(t *testing.T) {
 		QueryStringParameters: map[string]string{
 			"type":            "url",
 			"format":          "excel",
+			"country":         "tr",
+			"language":        "tr",
 			"accountName":     "bora@zeo.org",
 			"accountPassword": "12341234",
 		},
@@ -50,8 +52,10 @@ func TestExcelResultForKeywords(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":   "keyword",
-			"format": "excel",
+			"type":     "keyword",
+			"format":   "excel",
+			"country":  "tr",
+			"language": "tr",
 		},
 		Body: `{"values": [{"value": "zeo carbon tool"}] }`,
 	}
@@ -68,8 +72,10 @@ func TestSheetResultForURLs(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":   "url",
-			"format": "sheet",
+			"type":     "url",
+			"format":   "sheet",
+			"country":  "tr",
+			"language": "tr",
 		},
 		Body: `{"values": [{"value": "https://tools.zeo.org/carbon"}] }`,
 	}
@@ -86,8 +92,10 @@ func TestSheetResultForKeywords(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":   "keyword",
-			"format": "sheet",
+			"type":     "keyword",
+			"format":   "sheet",
+			"country":  "tr",
+			"language": "tr",
 		},
 		Body: `{"values": [{"value": "zeo carbon tool"}] }`,
 	}
