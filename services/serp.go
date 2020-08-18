@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -80,45 +79,65 @@ func getResultFromSerpApi(kws keywords, language string, serpLimit int) (map[str
 		return nil, http.StatusInternalServerError, err
 	}
 
-	// Create the request.
-	req, err := http.NewRequest(
-		"POST", os.Getenv("SERP_API_ADDRESS"),
-		bytes.NewReader(rqJson),
-	)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
+	// Let's start to sending requests.
+	// It will try 10 times at most.
+	// For each time, randomly API address will be selected.
+	tries := 0
+	for tries < 10 {
+		// Get API address and key..
+		address, key, err := helpers.RandomAPICred()
+		if err != nil {
+			return nil, http.StatusInternalServerError, errors.New("We have some issues with the SERP API at this moment. Please try later.")
+		}
+
+		// Create the request.
+		req, err := http.NewRequest("POST", address, bytes.NewReader(rqJson))
+		if err != nil {
+			return nil, http.StatusInternalServerError, errors.New("We have some issues with the SERP API at this moment. Please try later.")
+		}
+
+		// Set basic auth info.
+		req.Header.Add("x-api-key", key)
+
+		// Send the request.
+		c := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+		res, err := c.Do(req)
+		defer res.Body.Close()
+		if err != nil {
+			return nil, http.StatusServiceUnavailable, errors.New("We have some issues with SERP API at this moment. Please try later.")
+		}
+
+		// Check the result's status code.
+		if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
+			log.Printf("Error: Unavailable SERP API Service.\nStatus: %d\n", res.StatusCode)
+			return nil, http.StatusServiceUnavailable, errors.New("We have some issues with SERP API at this moment. Please try later.")
+		}
+
+		// Read the result, unmarshal it to the struct.
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, http.StatusInternalServerError, errors.New("We have some issues at this moment. Please try later.")
+		}
+		rsMap := make(map[string]map[string][]serpApiResponse)
+		_ = json.Unmarshal(body, &rsMap) // TODO: handle this error.
+
+		// Check if there is any result?!.
+		// If there is no result, we will be on the roads one more time.
+		for _, v := range rsMap {
+			for _, k := range v {
+				if len(k) != 0 {
+					return rsMap["data"], http.StatusOK, nil
+				}
+			}
+
+		}
+
+		tries++
 	}
 
-	// Set basic auth info.
-	req.SetBasicAuth(os.Getenv("SERP_API_USERNAME"), os.Getenv("SERP_API_PASSWORD"))
-
-	// Send the request.
-	c := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-	res, err := c.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues with SERP API at this moment. Please try later.")
-	}
-
-	if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
-		log.Printf("Error: Unavailable SERP API Service.\nStatus: %d\n", res.StatusCode)
-		return nil, http.StatusServiceUnavailable, errors.New("Error: We have some issues with SERP API at this moment. Please try later.")
-	}
-
-	// Read the result, unmarshal it to the struct.
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-	rs := map[string][]serpApiResponse{}
-	err = json.Unmarshal(body, &rs)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-
-	return rs, http.StatusOK, nil
+	return nil, http.StatusServiceUnavailable, errors.New("We have some issues with the SERP API at this moment. Please try later.")
 }
 
 // parseResponseToFieldsForURLs extract the response to the URLSet.

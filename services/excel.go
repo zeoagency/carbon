@@ -179,7 +179,7 @@ func createFailSheetForURLs(f *excelize.File, urlSet *models.URLSet) error {
 // createSuccessSheetForKeywords creates success sheet for the given excel.
 func createSuccessSheetForKeywords(f *excelize.File, keywordSet *models.KeywordSet) error {
 	letters := []string{"A", "B", "C", "D", "E"}
-	titles := []string{"URL", "Position", "Title", "URL", "Description"}
+	titles := []string{"Keyword", "Position", "Title", "URL", "Description"}
 	// NOTE: letters and titles sizes must be same!
 
 	// Set titles.
