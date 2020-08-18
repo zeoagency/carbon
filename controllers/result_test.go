@@ -30,15 +30,17 @@ func TestExcelResultForURLs(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":   "url",
-			"format": "excel",
+			"type":            "url",
+			"format":          "excel",
+			"accountName":     "bora@zeo.org",
+			"accountPassword": "12341234",
 		},
-		Body: `{"values": [{"value": "https://tools.zeo.org/carbon"}] }`,
+		Body: `{"values": [{"value": "https://tools.zeo.org/carbon"}, {"value": "https://zeo.org"}] }`,
 	}
 
 	res, _ := Result(request)
 	if res.StatusCode != http.StatusCreated {
-		t.Fatal("Error occur while getting excel file.")
+		t.Fatal("Error occur while getting excel file.", res.Body)
 	}
 
 	fmt.Println(res.Headers)

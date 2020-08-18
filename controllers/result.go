@@ -2,10 +2,13 @@ package controllers
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -19,6 +22,14 @@ type requestBody struct {
 	Values []struct {
 		Value string `json:"value"`
 	} `json:"values"`
+}
+
+type internal struct {
+	Accounts []struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+		Limit    int    `json:"limit"` // "-1" means there is no limit.
+	} `json:"accounts"`
 }
 
 // Result works like router.
@@ -35,8 +46,21 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 		}, nil
 	}
 
+	// Check internal.
+	// iLimit
+	//    "0" = non-login user.
+	//    "-1" = limitless user.
+	//    "..." = limit is defined.
+	isInternal, iLimit, status, err := checkAndAuthInternal(request)
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			StatusCode: status,
+			Body:       `{ "error": "` + err.Error() + `" }`,
+		}, nil
+	}
+
 	// Process the request.
-	f, sheetURL, status, err := getResult(request, rType, format)
+	f, sheetURL, status, err := getResult(request, rType, format, isInternal, iLimit)
 	if err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: status,
@@ -57,7 +81,7 @@ func Result(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 }
 
 // getResult returns the result by evaluating the option inputs.
-func getResult(request events.APIGatewayProxyRequest, rType string, format string) (*bytes.Buffer, string, int, error) {
+func getResult(request events.APIGatewayProxyRequest, rType string, format string, isInternal bool, iLimit int) (*bytes.Buffer, string, int, error) {
 	// Unmarshal the json request.
 	var rBody requestBody
 	err := json.Unmarshal([]byte(request.Body), &rBody)
@@ -65,9 +89,9 @@ func getResult(request events.APIGatewayProxyRequest, rType string, format strin
 		return nil, "", http.StatusBadRequest, errors.New("Error occur while unmarshalling body-json value. Check your request.")
 	}
 
-	// Check the count.
-	if len(rBody.Values) > 100 {
-		return nil, "", http.StatusBadRequest, errors.New("You have more than 100 URLs.")
+	status, err := checkLimit(len(rBody.Values), isInternal, iLimit)
+	if err != nil {
+		return nil, "", status, err
 	}
 
 	switch rType {
@@ -171,6 +195,46 @@ func getSheetResultForKeywords(rBody requestBody) (string, int, error) {
 	return sheetURL, http.StatusCreated, nil
 }
 
+// checkAndAuthInternal checks if the request includes internal info or not.
+// If there is internal keys, validates them.
+func checkAndAuthInternal(request events.APIGatewayProxyRequest) (bool, int, int, error) {
+	accountName := ""
+	if v, ok := request.QueryStringParameters["accountName"]; ok {
+		accountName = v
+	} else {
+		return false, 0, http.StatusOK, nil
+	}
+
+	accountPassword := ""
+	if v, ok := request.QueryStringParameters["accountPassword"]; ok {
+		accountPassword = v
+	} else {
+		return false, 0, http.StatusUnauthorized, errors.New("Password is empty.")
+	}
+
+	internalJSON := os.Getenv("INTERNAL_ACCOUNTS_JSON")
+	if internalJSON == "" {
+		return false, 0, http.StatusUnauthorized, errors.New("Authorization is not valid.")
+	}
+
+	i := internal{}
+	err := json.Unmarshal([]byte(internalJSON), &i)
+	if err != nil {
+		return false, 0, http.StatusInternalServerError, errors.New("We have some issues with excepting internal account logins. Please try later.")
+	}
+
+	h := sha256.New()
+	h.Write([]byte(accountPassword))
+	passwordHash := fmt.Sprintf("%x", h.Sum(nil))
+	for _, x := range i.Accounts {
+		if accountName == x.Name && passwordHash == x.Password {
+			return true, x.Limit, http.StatusOK, nil
+		}
+	}
+
+	return false, 0, http.StatusUnauthorized, errors.New("Authorization is not valid.")
+}
+
 // checkAndGetParams checks the params are set or not.
 func checkAndGetParams(request events.APIGatewayProxyRequest) (string, string, int, error) {
 	// Check the method.
@@ -195,6 +259,28 @@ func checkAndGetParams(request events.APIGatewayProxyRequest) (string, string, i
 	}
 
 	return rType, format, http.StatusOK, nil
+}
+
+// checkLimit checks limit for the user.
+func checkLimit(bodyLen int, isInternal bool, iLimit int) (int, error) {
+	if !isInternal {
+		// Check the count for non-login user.
+		if bodyLen > 100 {
+			return http.StatusBadRequest, errors.New("You have more than 100 URLs.")
+		}
+		return http.StatusOK, nil
+	}
+
+	switch iLimit {
+	case -1: // limitless.
+		return http.StatusOK, nil
+	default: // has a limit.
+		if bodyLen > iLimit {
+			return http.StatusBadRequest, fmt.Errorf("You have more than %d URLs.", iLimit)
+		}
+	}
+
+	return http.StatusOK, nil
 }
 
 // serveFile create a response to serve the given file.
