@@ -9,10 +9,10 @@ The API is served at AWS Lambda.
 ## Features
 
 - Supports URL and Keyword options.
-	- URLs option; finds related 3 URLs.  
-	  Mostly used to find options for 404 pages.  
-	- Keywords option; finds related 10 URLs.  
-	  The result includes title, desc and url for each input keywords.  
+	- URL option; finds related 3 URLs.  
+	  Mostly used to find alternative URLs for 404 pages.  
+	- Keyword option; finds related 10 URLs.  
+	  The result includes title, url, and description for each input keywords.  
 	  Mostly used for SERP.  
 - Supports country and language specification.  
 - Supports 2 export options; Excel and Google Sheets.  
@@ -28,21 +28,21 @@ The API is served at AWS Lambda.
 
 - Type: **POST**
 - Params: 
-	- type `must`  
+	- **type** `must`  
 	  options: `keyword` or `url`.  
 	  note: `keyword` option is only available for internal users.
-	- format `must`  
+	- **format** `must`  
 	  options: `excel` or `sheet`.
-	- country `must`  
+	- **country** `must`  
 	  options: all countries supported by Google. 
-	- langauge `must`  
+	- **langauge** `must`  
 	  options: all languages supported by Google.
-	- accountName  
-	- accountPassword  
+	- **accountName**  
+	- **accountPassword**  
 - Header:
-	- Accept  `must`  
-	  If the format is `excel`  
-	  you need to set `Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+	- **Accept**  `must`  
+	  If the format is `excel`,  
+	  you need to set `Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`  
 - Body:
 	- Raw Data  
 		- As a JSON value,  
@@ -65,25 +65,25 @@ The API is served at AWS Lambda.
 
 Status;
 
-- Type: 201
+- Type: **201**
 	- That means the data is created.
-- Type: 400
+- Type: **400**
 	- That means the inputs are not valid.  
 	  Check the error message.
-- Type: 401
+- Type: **401**
 	- That means auth is not successful.
-- Type: 403
+- Type: **403**
 	- That means the method is forbidden.  
 	  Use POST method.
-- Type: 500
+- Type: **500**
 	- That means internal error occurs while creating the data.
-- Type: 503
+- Type: **503**
 	- That means the service is not available.  
 	  Try later.
 
 Header and body;
 
-- For excel;
+- For **excel**;
 	- Header  
 		```
 		Content-Disposition: attachment; filename="result.xlsx"
@@ -92,7 +92,7 @@ Header and body;
 		```
 	- Body  
 		`file`
-- For sheet;  
+- For **sheet**;  
 	- Body  
 		```
 		 {
@@ -116,7 +116,7 @@ Header and body;
 
 #### Usage at local
 
-There is an easy way to test usage of Lambda projects at the local, `lambci`.
+There is an easy way to test lambda projects at the local, `lambci`.
 
 ```shell
 go build -o carbon && docker run --rm -v "$PWD":/var/task:ro,delegated lambci/lambda:go1.x carbon '{"HTTPMethod": "POST", "QueryStringParameters": {"type": "url", "format": "sheet", "country": "tr", "language": "tr"},"Body": "{\"values\": [{\"value\": \"https://boratanrikulu.dev\/contact\"}] }"}' && rm carbon
@@ -150,3 +150,8 @@ If you need to update the function, take a build and run this command.
 ```shell
 aws lambda update-function-code --function-name CarbonLambda --zip-file fileb://./deploy.zip
 ```
+
+## Credits
+
+| [<img src="https://pbs.twimg.com/profile_images/935883931416657920/8HBYzvY7_400x400.jpg" width="100px;"/>](https://twitter.com/mertazizoglu) <br/> [T. Mert Azizoğlu](https://twitter.com/mertazizoglu)<br/><sub>Idea By</sub><br/> | [<img src="https://avatars3.githubusercontent.com/u/20258973?s=460&u=3147c97360ef8b5d64ef26c77077e1926a686356&v=4" width="100px;"/>](https://github.com/boratanrikulu) <br/>[Bora Tanrıkulu](https://github.com/boratanrikulu)<br/><sub>Developed By</sub><br/> |  
+| - | - |
