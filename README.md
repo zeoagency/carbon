@@ -72,6 +72,9 @@ Status;
 	  Check the error message.
 - Type: 401
 	- That means auth is not successful.
+- Type: 403
+	- That means the method is forbidden.  
+	  Use POST method.
 - Type: 500
 	- That means internal error occurs while creating the data.
 - Type: 503
@@ -110,8 +113,14 @@ Header and body;
 
 - Copy `env.sample` to `.env`.  
 - Update secret values in `.env`.
-- Then you can run the app.  
-  ```go run main.go```
+
+#### Usage at local
+
+There is an easy way to test usage of Lambda projects at the local, `lambci`.
+
+```shell
+go build -o carbon && docker run --rm -v "$PWD":/var/task:ro,delegated lambci/lambda:go1.x carbon '{"HTTPMethod": "POST", "QueryStringParameters": {"type": "url", "format": "sheet", "country": "tr", "language": "tr"},"Body": "{\"values\": [{\"value\": \"https://boratanrikulu.dev\/contact\"}] }"}' && rm carbon
+```
 
 #### Run tests
 
