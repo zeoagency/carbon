@@ -2,44 +2,40 @@ package helpers
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"math/rand"
 	"os"
 	"time"
 )
 
-type cred struct {
+type API struct {
 	Keys []struct {
 		Address string `json:"address"`
 		Key     string `json:"key"`
 	} `json:"keys"`
 }
 
-// RandomAPICred returns randomly selected api-key values.
-func RandomAPICred() (string, string, error) {
+// RandomAPICred returns randomly selected api-key index and the key list.
+func RandomAPICred() (API, int) {
 	credJSON := os.Getenv("SERP_API_CREDENTIALS_JSON")
 
-	apiCred := cred{}
-	err := json.Unmarshal([]byte(credJSON), &apiCred)
+	api := API{}
+	err := json.Unmarshal([]byte(credJSON), &api)
 	if err != nil {
-		fmt.Println(err)
-		return "", "", err
+		return api, -1
 	}
 
-	length := len(apiCred.Keys)
+	length := len(api.Keys)
 	if length == 0 {
-		return "", "", errors.New("No api-key.")
+		return api, -1
 	}
 
 	rand.Seed(time.Now().UnixNano())
 	selected := rand.Intn(length)
-	address, key := apiCred.Keys[selected].Address, apiCred.Keys[selected].Key
 
 	// If the keys are empty, return error.
-	if address == "" && key == "" {
-		return "", "", errors.New("No api-key.")
+	if api.Keys[selected].Address == "" || api.Keys[selected].Key == "" {
+		return api, -1
 	}
 
-	return address, key, nil
+	return api, selected
 }

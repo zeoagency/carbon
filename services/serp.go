@@ -82,18 +82,20 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 	// Let's start to sending requests.
 	// It will try 10 times at most.
 	// For each time, randomly API address will be selected.
-	tries := 0
-	for tries < 10 {
-		// Get API address and key..
-		address, key, err := helpers.RandomAPICred()
-		if err != nil {
-			return nil, http.StatusInternalServerError, errors.New("We have some issues with the SERP API at this moment. Please try later.")
+
+	api, selected := helpers.RandomAPICred()
+	for i, _ := range api.Keys {
+		if selected == -1 {
+			// -1 means the selected address-key is empty.
+			continue
 		}
+		// Example; If the selected is 4, Then it works like that: 4,5,6,7,8,9,0,1,2,3
+		address, key := api.Keys[(selected+i)%len(api.Keys)].Address, api.Keys[(selected+i)%len(api.Keys)].Key
 
 		// Create the request.
 		req, err := http.NewRequest("POST", address, bytes.NewReader(rqJson))
 		if err != nil {
-			return nil, http.StatusInternalServerError, errors.New("We have some issues with the SERP API at this moment. Please try later.")
+			continue
 		}
 
 		// Set basic auth info.
@@ -104,21 +106,21 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 			Timeout: 30 * time.Second,
 		}
 		res, err := c.Do(req)
-		defer res.Body.Close()
 		if err != nil {
-			return nil, http.StatusServiceUnavailable, errors.New("We have some issues with SERP API at this moment. Please try later.")
+			continue
 		}
+		defer res.Body.Close()
 
 		// Check the result's status code.
 		if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
-			log.Printf("Error: Unavailable SERP API Service.\nStatus: %d\n", res.StatusCode)
-			return nil, http.StatusServiceUnavailable, errors.New("We have some issues with SERP API at this moment. Please try later.")
+			log.Printf("Error: Unavailable SERP API Service. Status: %d\n", res.StatusCode)
+			continue
 		}
 
 		// Read the result, unmarshal it to the struct.
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			return nil, http.StatusInternalServerError, errors.New("We have some issues at this moment. Please try later.")
+			continue
 		}
 		rsMap := make(map[string]map[string][]serpApiResponse)
 		_ = json.Unmarshal(body, &rsMap) // TODO: handle this error.
@@ -131,10 +133,7 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 					return rsMap["data"], http.StatusOK, nil
 				}
 			}
-
 		}
-
-		tries++
 	}
 
 	return nil, http.StatusServiceUnavailable, errors.New("We have some issues with the SERP API at this moment. Please try later.")

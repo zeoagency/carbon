@@ -16,14 +16,11 @@ func init() {
 }
 
 func TestRandomAPICred(t *testing.T) {
-	address, key, err := RandomAPICred()
-	if err != nil {
-		t.Fatal(err)
-	}
+	api, index := RandomAPICred()
 
-	if address == "" || key == "" {
+	if (index != -1) && (api.Keys[index].Address == "" || api.Keys[index].Key == "") {
 		t.Fatal("Address or key is empty.")
 	}
 
-	fmt.Println(address, key)
+	fmt.Println(api.Keys[index].Address, api.Keys[index].Key)
 }

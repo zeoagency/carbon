@@ -82,7 +82,7 @@ func TestSheetResultForURLs(t *testing.T) {
 
 	res, _ := Result(request)
 	if res.StatusCode != http.StatusCreated {
-		t.Fatal("Error occur while getting excel file.")
+		t.Fatal("Error occur while getting excel file.", res.Body)
 	}
 
 	fmt.Println(res.Body)
