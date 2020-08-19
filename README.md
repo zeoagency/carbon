@@ -6,47 +6,21 @@ It exports data in Excel or Google Sheets.
 
 The API is served at AWS Lambda.
 
-#### Requirements
+## Features
 
-- SERP API Credantials. (to access credantials contact with [**zeo.org**](https://zeo.org/contact-us/))
-- Google Credantials. (have to enabled Drive API V3 on the account)
-- Google Access Token. (to access to Google Drive as an user)
-- Go v1.15
-
-#### How to set up
-
-- Copy `env.sample` to `.env`.  
-- Update secret values in `.env`.
-- Then you can run the app.  
-  ```go run main.go```
-
-#### Features
-
-- Finds related results for the given input.  
-- 2 input options; URLs and Keywords.  
+- Supports URL and Keyword options.
 	- URLs option; finds related 3 URLs.  
 	  Mostly used to find options for 404 pages.  
 	- Keywords option; finds related 10 URLs.  
 	  The result includes title, desc and url for each input keywords.  
 	  Mostly used for SERP.  
-- Supports country and language specification for SERP.  
-- 2 export options; Excel and Google Sheets.  
-	- Suggested URLs are made bold for URLs options.  
-- Supports internal accounts.
+- Supports country and language specification.  
+- Supports 2 export options; Excel and Google Sheets.  
+	- Suggested URLs are made bold for URL options.  
+- Supports internal accounts with limitation.
+	- For non-login users, the limit is 100 URLs.
 
-#### Run tests
-
-To run all tests;
-```shell
-go test ./...
-```
-
-To run specific test;
-```shell
-go test ./services -run TestConvertURLResultToExcel -v 
-```
-
-#### Endpoint
+## Endpoint
 
 **URL:** /
 
@@ -64,6 +38,10 @@ go test ./services -run TestConvertURLResultToExcel -v
 	  options: all languages supported by Google.
 	- accountName  
 	- accountPassword  
+- Header:
+	- Accept  `must`  
+	  If the format is `excel`  
+	  you need to set `Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
 - Body:
 	- Raw Data  
 		- As a JSON value,  
@@ -117,3 +95,48 @@ Header and body;
 		     "sheetURL": "https://docs.google.com/spreadsheets/d/...",
 		 }
 		```
+
+## Development
+
+#### Requirements
+
+- SERP API Credantials. (to access credantials contact with [**zeo.org**](https://zeo.org/contact-us/))
+- Google Credantials. (have to enabled Drive API V3 on the account)
+- Google Access Token. (to access to Google Drive as an user)
+- Go v1.15
+
+#### How to set up
+
+- Copy `env.sample` to `.env`.  
+- Update secret values in `.env`.
+- Then you can run the app.  
+  ```go run main.go```
+
+#### Run tests
+
+To run all tests;
+```shell
+go test ./...
+```
+
+To run specific test;
+```shell
+go test ./services -run TestConvertURLResultToExcel -v 
+```
+
+#### How to deploy to AWS Lambda
+
+Build.
+```shell
+go build -o carbon && zip deploy.zip carbon
+```
+
+Create the function.
+```shell
+aws lambda create-function --function-name CarbonLambda --handler carbon --runtime go1.x --role  arn:aws:iam::<account-id>:role/<role> --zip-file fileb://./deploy.zip --tracing-config Mode=Active
+```
+
+If you need to update the function, take a build and run this command.
+```shell
+aws lambda update-function-code --function-name CarbonLambda --zip-file fileb://./deploy.zip
+```
