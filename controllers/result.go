@@ -13,8 +13,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 
-	"gitlab.com/seo.do/zeo-carbon/models"
-	"gitlab.com/seo.do/zeo-carbon/services"
+	"github.com/zeoagency/carbon/models"
+	"github.com/zeoagency/carbon/services"
 )
 
 // requestBody keeps request body.

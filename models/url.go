@@ -3,7 +3,7 @@ package models
 import (
 	"strings"
 
-	"gitlab.com/seo.do/zeo-carbon/helpers"
+	"github.com/zeoagency/carbon/helpers"
 
 	"github.com/schollz/closestmatch"
 )

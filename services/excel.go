@@ -6,8 +6,8 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 
-	"gitlab.com/seo.do/zeo-carbon/helpers"
-	"gitlab.com/seo.do/zeo-carbon/models"
+	"github.com/zeoagency/carbon/helpers"
+	"github.com/zeoagency/carbon/models"
 )
 
 var titleStyle = `{"alignment":{"horizontal":"center", "vertical":"center"}, "font":{"size":12, "name":"Calibri", "bold":true, "color":"#ffffff"}, "fill":{"type":"pattern", "color":["#000000"], "pattern":1}}`

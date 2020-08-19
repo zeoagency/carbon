@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/joho/godotenv"
 
-	"gitlab.com/seo.do/zeo-carbon/controllers"
+	"github.com/zeoagency/carbon/controllers"
 )
 
 func init() {

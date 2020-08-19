@@ -1,4 +1,4 @@
-module gitlab.com/seo.do/zeo-carbon
+module github.com/zeoagency/carbon
 
 go 1.15
 

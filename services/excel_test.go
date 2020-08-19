@@ -6,7 +6,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 
-	"gitlab.com/seo.do/zeo-carbon/models"
+	"github.com/zeoagency/carbon/models"
 )
 
 func TestConvertURLResultToExcel(t *testing.T) {

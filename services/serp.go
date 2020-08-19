@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.com/seo.do/zeo-carbon/helpers"
-	"gitlab.com/seo.do/zeo-carbon/models"
+	"github.com/zeoagency/carbon/helpers"
+	"github.com/zeoagency/carbon/models"
 )
 
 // The API response includes this struct as an array for each keywords.

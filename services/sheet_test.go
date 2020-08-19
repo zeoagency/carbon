@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"gitlab.com/seo.do/zeo-carbon/models"
+	"github.com/zeoagency/carbon/models"
 )
 
 func init() {
