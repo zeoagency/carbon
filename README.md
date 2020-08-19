@@ -72,7 +72,7 @@ Status;
 	  Check the error message.
 - Type: **401**
 	- That means auth is not successful.
-- Type: **403**
+- Type: **405**
 	- That means the method is forbidden.  
 	  Use POST method.
 - Type: **500**
