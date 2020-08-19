@@ -96,8 +96,7 @@ func getResult(request events.APIGatewayProxyRequest, isInternal bool, iLimit in
 		return nil, "", status, err
 	}
 
-	switch rType {
-	case "url":
+	if rType == "url" {
 		switch format {
 		case "excel":
 			f, status, err := getExcelResultForURLs(rBody)
@@ -108,8 +107,7 @@ func getResult(request events.APIGatewayProxyRequest, isInternal bool, iLimit in
 		default:
 			return nil, "", http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
 		}
-
-	case "keyword":
+	} else if isInternal && rType == "keyword" {
 		switch format {
 		case "excel":
 			f, status, err := getExcelResultForKeywords(rBody)
@@ -120,8 +118,12 @@ func getResult(request events.APIGatewayProxyRequest, isInternal bool, iLimit in
 		default:
 			return nil, "", http.StatusBadRequest, errors.New("Format must be \"excel\" or \"sheet\"")
 		}
-	default:
-		return nil, "", http.StatusBadRequest, errors.New("Type must be \"url\" or \"keyword\".")
+	} else {
+		errText := "Type must be \"url\"."
+		if isInternal {
+			errText = "Type must be \"url\" or \"keyword\"."
+		}
+		return nil, "", http.StatusBadRequest, errors.New(errText)
 	}
 }
 

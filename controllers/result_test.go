@@ -30,12 +30,10 @@ func TestExcelResultForURLs(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":            "url",
-			"format":          "excel",
-			"country":         "tr",
-			"language":        "tr",
-			"accountName":     "bora@zeo.org",
-			"accountPassword": "12341234",
+			"type":     "url",
+			"format":   "excel",
+			"country":  "tr",
+			"language": "tr",
 		},
 		Body: `{"values": [{"value": "https://tools.zeo.org/carbon"}, {"value": "https://zeo.org"}] }`,
 	}
@@ -52,17 +50,19 @@ func TestExcelResultForKeywords(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":     "keyword",
-			"format":   "excel",
-			"country":  "tr",
-			"language": "tr",
+			"type":            "keyword",
+			"format":          "excel",
+			"country":         "tr",
+			"language":        "tr",
+			"accountName":     "bora@zeo.org",
+			"accountPassword": "12341234",
 		},
 		Body: `{"values": [{"value": "zeo carbon tool"}] }`,
 	}
 
 	res, _ := Result(request)
 	if res.StatusCode != http.StatusCreated {
-		t.Fatal("Error occur while getting excel file.")
+		t.Fatal("Error occur while getting excel file.", res.Body)
 	}
 
 	fmt.Println(res.Headers)
@@ -92,17 +92,19 @@ func TestSheetResultForKeywords(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		HTTPMethod: "POST",
 		QueryStringParameters: map[string]string{
-			"type":     "keyword",
-			"format":   "sheet",
-			"country":  "tr",
-			"language": "tr",
+			"type":            "keyword",
+			"format":          "sheet",
+			"country":         "tr",
+			"language":        "tr",
+			"accountName":     "bora@zeo.org",
+			"accountPassword": "12341234",
 		},
 		Body: `{"values": [{"value": "zeo carbon tool"}] }`,
 	}
 
 	res, _ := Result(request)
 	if res.StatusCode != http.StatusCreated {
-		t.Fatal("Error occur while getting excel file.")
+		t.Fatal("Error occur while getting excel file.", res.Body)
 	}
 
 	fmt.Println(res.Body)

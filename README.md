@@ -30,6 +30,7 @@ The API is served at AWS Lambda.
 - Params: 
 	- type `must`  
 	  options: `keyword` or `url`.  
+	  note: `keyword` option is only available for internal users.
 	- format `must`  
 	  options: `excel` or `sheet`.
 	- country `must`  
