@@ -41,15 +41,16 @@ type dfsApiRequest struct {
 }
 
 // getResultFromDFSApi returns DFS API response for the given data.
-func getResultFromDFSApi(kws keywords, country, language string, serpLimit int) ([]*dfsApiResponse, int, error) {
+func getResultFromDFSApi(kws keywords, country, language string, serpLimit int) (map[string]*dfsApiResponse, int, error) {
 	// set country code.
 	c := make(map[string]string)
 	_ = json.Unmarshal([]byte(countries), &c)
 	cCode := c[strings.ToUpper(country)]
 
-	responses := []*dfsApiResponse{}
-	wg := new(sync.WaitGroup)
+	// a map to keep result
+	responses := make(map[string]*dfsApiResponse) // the key is originalURL
 
+	wg := new(sync.WaitGroup)
 	for _, kw := range kws.ToStringSlice() {
 		rq := []dfsApiRequest{}
 		rq = append(rq, dfsApiRequest{
@@ -61,7 +62,7 @@ func getResultFromDFSApi(kws keywords, country, language string, serpLimit int) 
 		})
 
 		wg.Add(1)
-		go sendRequest(wg, &responses, rq)
+		go sendRequest(wg, responses, kws.Original(kw), rq)
 	}
 
 	wg.Wait()
@@ -69,7 +70,7 @@ func getResultFromDFSApi(kws keywords, country, language string, serpLimit int) 
 }
 
 // sendRequest works as async, adds all results to the given slice.
-func sendRequest(wg *sync.WaitGroup, responses *[]*dfsApiResponse, rq []dfsApiRequest) {
+func sendRequest(wg *sync.WaitGroup, responses map[string]*dfsApiResponse, key string, rq []dfsApiRequest) {
 	defer wg.Done()
 
 	rqJson, err := json.Marshal(rq)
@@ -108,19 +109,17 @@ func sendRequest(wg *sync.WaitGroup, responses *[]*dfsApiResponse, rq []dfsApiRe
 	response := dfsApiResponse{}
 	err = json.Unmarshal(body, &response) // TODO: handle this error.
 
-	*responses = append(*responses, &response)
+	responses[key] = &response
 }
 
 // parseDFSResponseToFieldsForURLs extract the response to the URLSet.
 // It only adds to success list when domains are matched.
 // If it couldn't find any related URLs, it adds to the fail list.
-func parseDFSResponseToFieldsForURLs(responses []*dfsApiResponse, urlSet *models.URLSet) {
-	for _, response := range responses {
+func parseDFSResponseToFieldsForURLs(responses map[string]*dfsApiResponse, urlSet *models.URLSet) {
+	for originalURL, response := range responses {
 		for _, task := range response.Tasks {
+			r := []string{}
 			for _, result := range task.Result {
-				url := urlSet.URLs[result.Keyword]
-
-				r := []string{}
 				for _, item := range result.Items {
 					if len(r) == 3 {
 						break
@@ -134,12 +133,12 @@ func parseDFSResponseToFieldsForURLs(responses []*dfsApiResponse, urlSet *models
 						r = append(r, item.URL)
 					}
 				}
+			}
 
-				if len(r) != 0 {
-					urlSet.AddSuccess(url.FullURL, r)
-				} else {
-					urlSet.AddFail(url.FullURL, "We could not find any related URLs.")
-				}
+			if len(r) != 0 {
+				urlSet.AddSuccess(originalURL, r)
+			} else {
+				urlSet.AddFail(originalURL, "We could not find any related URLs.")
 			}
 		}
 	}
@@ -148,11 +147,11 @@ func parseDFSResponseToFieldsForURLs(responses []*dfsApiResponse, urlSet *models
 // parseDFSResponseToFieldsForKeywords extract the response to the KeywordSet.
 // It only adds to success list when the value is valid.
 // If it couldn't find any results, it adds to the fail list.
-func parseDFSResponseToFieldsForKeywords(responses []*dfsApiResponse, keywordSet *models.KeywordSet) {
-	for _, response := range responses {
+func parseDFSResponseToFieldsForKeywords(responses map[string]*dfsApiResponse, keywordSet *models.KeywordSet) {
+	for keyword, response := range responses {
 		for _, task := range response.Tasks {
+			r := []models.KeywordSuccessResult{}
 			for _, result := range task.Result {
-				r := []models.KeywordSuccessResult{}
 				for _, item := range result.Items {
 					if len(r) == 10 {
 						break
@@ -163,11 +162,11 @@ func parseDFSResponseToFieldsForKeywords(responses []*dfsApiResponse, keywordSet
 						URL:   item.URL,
 					})
 				}
-				if len(r) != 0 {
-					keywordSet.AddSuccess(result.Keyword, r)
-				} else {
-					keywordSet.AddFail(result.Keyword, "We could not find any related URLs.")
-				}
+			}
+			if len(r) != 0 {
+				keywordSet.AddSuccess(keyword, r)
+			} else {
+				keywordSet.AddFail(keyword, "We could not find any related URLs.")
 			}
 		}
 	}

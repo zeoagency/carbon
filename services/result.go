@@ -11,6 +11,7 @@ import (
 // It used in SERP and DFS.
 type keywords interface {
 	ToStringSlice() []string
+	Original(string) string // returns original value for the given key.
 }
 
 // GetResultByUsingURLs add the result to the given URLSet by talking with Serp API or DFS.
