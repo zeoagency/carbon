@@ -19,6 +19,7 @@ The API is served at AWS Lambda.
 	- Suggested URLs are made bold for URL options.  
 - Supports internal accounts with limitation.
 	- For non-login users, the limit is 100 URLs.
+- Supports 2 resources to take SERP data.
 
 ## Endpoint
 

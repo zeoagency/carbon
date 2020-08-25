@@ -69,7 +69,7 @@ func sendRequest(wg *sync.WaitGroup, responses *[]*dfsApiResponse, rq []dfsApiRe
 	}
 
 	// Create the request.
-	req, err := http.NewRequest("POST", os.Getenv("DFS_API_ADDRESS"), bytes.NewReader(rqJson))
+	req, err := http.NewRequest("POST", "https://api.dataforseo.com/v3/serp/google/organic/live/regular", bytes.NewReader(rqJson))
 	if err != nil {
 		return
 	}
