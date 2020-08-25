@@ -15,6 +15,8 @@ import (
 
 	"github.com/zeoagency/carbon/models"
 	"github.com/zeoagency/carbon/services"
+	"github.com/zeoagency/carbon/services/excel"
+	"github.com/zeoagency/carbon/services/sheet"
 )
 
 // requestBody keeps request body.
@@ -142,7 +144,7 @@ func getExcelResultForURLs(rBody requestBody) (*bytes.Buffer, int, error) {
 	}
 
 	// Convert the result to excel.
-	f, err := services.ConvertURLResultToExcel(urlSet)
+	f, err := excel.ConvertURLResultToExcel(urlSet)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.New("We have some issue while creating the excel output. Please try later.")
 	}
@@ -156,7 +158,7 @@ func getSheetResultForURLs(rBody requestBody) (string, int, error) {
 	if err != nil {
 		return "", status, err
 	}
-	sheetURL, err := services.ImportFileToGoogleSheets(f)
+	sheetURL, err := sheet.ImportFileToGoogleSheets(f)
 	if err != nil {
 		return "", http.StatusInternalServerError, errors.New("We have some issue with Google Sheets. Please try later.")
 	}
@@ -178,7 +180,7 @@ func getExcelResultForKeywords(rBody requestBody) (*bytes.Buffer, int, error) {
 	}
 
 	// Convert the result to excel.
-	f, err := services.ConvertKeywordResultToExcel(keywordSet)
+	f, err := excel.ConvertKeywordResultToExcel(keywordSet)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.New("We have some issue while creating the excel output. Please try later.")
 	}
@@ -192,7 +194,7 @@ func getSheetResultForKeywords(rBody requestBody) (string, int, error) {
 	if err != nil {
 		return "", status, err
 	}
-	sheetURL, err := services.ImportFileToGoogleSheets(f)
+	sheetURL, err := sheet.ImportFileToGoogleSheets(f)
 	if err != nil {
 		return "", http.StatusInternalServerError, errors.New("We have some issue with Google Sheets. Please try later.")
 	}

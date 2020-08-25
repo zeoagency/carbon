@@ -1,13 +1,23 @@
-package services
+package excel
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/joho/godotenv"
 
 	"github.com/zeoagency/carbon/models"
+	"github.com/zeoagency/carbon/services"
 )
+
+func init() {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
 
 func TestConvertURLResultToExcel(t *testing.T) {
 	urlSet := models.NewURLSet()
@@ -17,7 +27,7 @@ func TestConvertURLResultToExcel(t *testing.T) {
 		"https://googlebunubulamaz.com/",
 		"notaavalidurl",
 	)
-	_, err := GetResultByUsingURLs(urlSet, "tr", "tr")
+	_, err := services.GetResultByUsingURLs(urlSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
@@ -52,7 +62,7 @@ func TestConvertKeywordResultToExcel(t *testing.T) {
 		"boratanrikulu blog postgresql nedir",
 		"googlebunubulamaz blog",
 	)
-	_, err := GetResultByUsingKeywords(keywordSet, "tr", "tr")
+	_, err := services.GetResultByUsingKeywords(keywordSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}

@@ -1,4 +1,4 @@
-package services
+package sheet
 
 import (
 	"fmt"
@@ -8,10 +8,12 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/zeoagency/carbon/models"
+	"github.com/zeoagency/carbon/services"
+	"github.com/zeoagency/carbon/services/excel"
 )
 
 func init() {
-	err := godotenv.Load("../.env")
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -27,12 +29,12 @@ func TestImportURLFileToGoogleSheets(t *testing.T) {
 		"https://boratanrikulu.dev/smtp-nasil-calisir-ve-postfix-kurulumu/",
 	)
 
-	_, err := GetResultByUsingURLs(urlSet, "tr", "tr")
+	_, err := services.GetResultByUsingURLs(urlSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
 
-	f, err := ConvertURLResultToExcel(urlSet)
+	f, err := excel.ConvertURLResultToExcel(urlSet)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,12 +55,12 @@ func TestImportKeywordFileToGoogleSheets(t *testing.T) {
 		"googlebunubulamaz blog",
 	)
 
-	_, err := GetResultByUsingKeywords(keywordSet, "tr", "tr")
+	_, err := services.GetResultByUsingKeywords(keywordSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
 
-	f, err := ConvertKeywordResultToExcel(keywordSet)
+	f, err := excel.ConvertKeywordResultToExcel(keywordSet)
 	if err != nil {
 		t.Fatal(err)
 	}
