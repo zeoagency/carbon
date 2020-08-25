@@ -35,35 +35,7 @@ type serpApiRequest struct {
 	Device    string   `json:"device"`
 }
 
-// keywords is an interface that includes ToStringSlice method.
-// You can use models.URLset or models.KeywordSet for this interface.
-type keywords interface {
-	ToStringSlice() []string
-}
-
-// GetResultFromSerpApiByUsingKeywords returns related 10 results for each Keywords by talking with SEPR API.
-func GetResultFromSerpApiByUsingKeywords(keywords *models.KeywordSet, country, language string) (int, error) {
-	response, status, err := getResultFromSerpApi(keywords, country, language, 20)
-	if err != nil {
-		return status, err
-	}
-
-	parseResponseToFieldsForKeywords(response, keywords)
-	return http.StatusOK, nil
-}
-
-// GetResultFromSerpApiByUsingURLs add the result to the given URLSet by talking the Serp API.
-func GetResultFromSerpApiByUsingURLs(urls *models.URLSet, country, language string) (int, error) {
-	response, status, err := getResultFromSerpApi(urls, country, language, 10)
-	if err != nil {
-		return status, err
-	}
-
-	parseResponseToFieldsForURLs(response, urls)
-	return http.StatusOK, nil
-}
-
-// getResultFromSerpApi returns SERP API Response for given data type.
+// getResultFromSerpApi returns SERP API Response for the given data.
 func getResultFromSerpApi(kws keywords, country, language string, serpLimit int) (map[string][]serpApiResponse, int, error) {
 	// Create the request body.
 	rq := serpApiRequest{
@@ -78,10 +50,6 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
-
-	// Let's start to sending requests.
-	// It will try 10 times at most.
-	// For each time, randomly API address will be selected.
 
 	api, selected := helpers.RandomAPICred()
 	for i, _ := range api.Keys {
@@ -134,6 +102,8 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 				}
 			}
 		}
+
+		log.Println("Error: Unavailable SERP API Service.")
 	}
 
 	return nil, http.StatusServiceUnavailable, errors.New("We have some issues with the SERP API at this moment. Please try later.")
@@ -142,7 +112,7 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 // parseResponseToFieldsForURLs extract the response to the URLSet.
 // It only adds to success list when domains are matched.
 // If it couldn't find any related URLs, it adds to the fail list.
-func parseResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) {
+func parseSERPResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) {
 	for _, url := range urlSet.URLs {
 		originalURL := url.FullURL
 		r := []string{}
@@ -157,6 +127,7 @@ func parseResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet 
 				if err != nil {
 					continue // The result's URL is not a valid URL.
 				}
+
 				if v.Type == "organic" && url.BaseURL == urlDomain {
 					r = append(r, v.URL)
 				}
@@ -174,7 +145,7 @@ func parseResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet 
 // parseResponseToFieldsForKeywords extract the response to the KeywordSet.
 // It only adds to success list when the value is valid.
 // If it couldn't find any results, it adds to the fail list.
-func parseResponseToFieldsForKeywords(response map[string][]serpApiResponse, keywordSet *models.KeywordSet) {
+func parseSERPResponseToFieldsForKeywords(response map[string][]serpApiResponse, keywordSet *models.KeywordSet) {
 	for keyword, _ := range keywordSet.Keywords {
 		r := []models.KeywordSuccessResult{}
 		for _, value := range response[keyword] {

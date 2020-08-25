@@ -141,6 +141,9 @@ func (u *URLSet) ToStringSlice() []string {
 
 // String method for URL model.
 func (u *url) String() string {
-	result := u.BaseURL + " " + u.Keywords
+	result := u.BaseURL
+	if u.Keywords != "" {
+		result += " " + u.Keywords
+	}
 	return result
 }

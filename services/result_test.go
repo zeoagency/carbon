@@ -17,15 +17,16 @@ func init() {
 	}
 }
 
-func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
+func TestGetResultByUsingURLs(t *testing.T) {
 	urlSet := models.NewURLSet()
 
 	urlSet.Add(
 		"https://boratanrikulu.dev/postgresql-nedir-nasil-calisir/",
 		"https://boratanrikulu.dev/smtp-nasil-calisir-ve-postfix-kurulumu/",
+		"https://googlebunubulamaz.com.tr",
 	)
 
-	status, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr", "tr")
+	status, err := GetResultByUsingURLs(urlSet, "tr", "tr")
 	if err != nil {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}
@@ -34,20 +35,25 @@ func TestGetResultFromSerpApiByUsingURLs(t *testing.T) {
 		fmt.Printf("\n\tURL: %s\n", originalURL)
 		for i, url := range success.URLs {
 			fmt.Printf("\t\t%d - %s\n", i, url)
-			fmt.Printf("\t\tSUGGESTED: %s\n", success.SuggestedURL)
 		}
+		fmt.Printf("\t\tSUGGESTED: %s\n", success.SuggestedURL)
+	}
+	for originalURL, fail := range urlSet.Fails {
+		fmt.Printf("\n\tURL: %s\n", originalURL)
+		fmt.Printf("\t\tREASON: %s\n", fail.Reason)
 	}
 }
 
-func TestGetResultFromSerpApiByUsingKeywords(t *testing.T) {
+func TestGetResultByUsingKeywords(t *testing.T) {
 	keywordSet := models.NewKeywordSet()
 
 	keywordSet.Add(
 		"boratanrikulu blog postgresql nedir nasil calisir",
 		"boratanrikulu blog smtp nasil calisir",
+		"googlebunubulamazcomtr",
 	)
 
-	status, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr", "tr")
+	status, err := GetResultByUsingKeywords(keywordSet, "tr", "tr")
 	if err != nil {
 		t.Fatalf("STATUS: %d ERROR: %s", status, err)
 	}
@@ -57,5 +63,9 @@ func TestGetResultFromSerpApiByUsingKeywords(t *testing.T) {
 		for i, result := range success.Results {
 			fmt.Printf("\t\t%d - %s\n", i, result)
 		}
+	}
+	for keyword, fail := range keywordSet.Fails {
+		fmt.Printf("\n\tURL: %s\n", keyword)
+		fmt.Printf("\t\tREASON: %s\n", fail.Reason)
 	}
 }

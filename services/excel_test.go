@@ -17,7 +17,7 @@ func TestConvertURLResultToExcel(t *testing.T) {
 		"https://googlebunubulamaz.com/",
 		"notaavalidurl",
 	)
-	_, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr", "tr")
+	_, err := GetResultByUsingURLs(urlSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
@@ -52,7 +52,7 @@ func TestConvertKeywordResultToExcel(t *testing.T) {
 		"boratanrikulu blog postgresql nedir",
 		"googlebunubulamaz blog",
 	)
-	_, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr", "tr")
+	_, err := GetResultByUsingKeywords(keywordSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}

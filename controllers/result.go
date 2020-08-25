@@ -136,7 +136,7 @@ func getExcelResultForURLs(rBody requestBody) (*bytes.Buffer, int, error) {
 	}
 
 	// Get the result
-	status, err := services.GetResultFromSerpApiByUsingURLs(urlSet, country, language)
+	status, err := services.GetResultByUsingURLs(urlSet, country, language)
 	if err != nil {
 		return nil, status, err
 	}
@@ -172,7 +172,7 @@ func getExcelResultForKeywords(rBody requestBody) (*bytes.Buffer, int, error) {
 	}
 
 	// Get the result
-	status, err := services.GetResultFromSerpApiByUsingKeywords(keywordSet, country, language)
+	status, err := services.GetResultByUsingKeywords(keywordSet, country, language)
 	if err != nil {
 		return nil, status, err
 	}

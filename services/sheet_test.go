@@ -27,7 +27,7 @@ func TestImportURLFileToGoogleSheets(t *testing.T) {
 		"https://boratanrikulu.dev/smtp-nasil-calisir-ve-postfix-kurulumu/",
 	)
 
-	_, err := GetResultFromSerpApiByUsingURLs(urlSet, "tr", "tr")
+	_, err := GetResultByUsingURLs(urlSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
@@ -53,7 +53,7 @@ func TestImportKeywordFileToGoogleSheets(t *testing.T) {
 		"googlebunubulamaz blog",
 	)
 
-	_, err := GetResultFromSerpApiByUsingKeywords(keywordSet, "tr", "tr")
+	_, err := GetResultByUsingKeywords(keywordSet, "tr", "tr")
 	if err != nil {
 		t.Fatal("Error occur while getting the result:", err)
 	}
