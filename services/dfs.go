@@ -108,6 +108,11 @@ func sendRequest(wg *sync.WaitGroup, responses map[string]*dfsApiResponse, key s
 	response := dfsApiResponse{}
 	err = json.Unmarshal(body, &response) // TODO: handle this error.
 
+	// Check the result's (body) status code.
+	if !(response.StatusCode >= 20000 && response.StatusCode <= 29999) {
+		log.Printf("Error: Unavailable DFS API Service. Status: %d\n", response.StatusCode)
+	}
+
 	responses[key] = &response
 }
 
