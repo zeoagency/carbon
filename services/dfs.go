@@ -46,7 +46,6 @@ func getResultFromDFSApi(kws keywords, country, language string, serpLimit int) 
 	c := make(map[string]string)
 	_ = json.Unmarshal([]byte(countries), &c)
 	cCode := c[strings.ToUpper(country)]
-
 	// a map to keep result
 	responses := make(map[string]*dfsApiResponse) // the key is originalURL
 
@@ -96,7 +95,7 @@ func sendRequest(wg *sync.WaitGroup, responses map[string]*dfsApiResponse, key s
 
 	// Check the result's status code.
 	if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
-		log.Printf("Error: Unavailable SERP API Service. Status: %d\n", res.StatusCode)
+		log.Printf("Error: Unavailable DFS API Service. Status: %d\n", res.StatusCode)
 		return
 	}
 

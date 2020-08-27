@@ -1,22 +1,24 @@
 # ZEO.ORG - Carbon API
 
-Carbon aims to find related URLs of given URLs or Keywords.  
-It's mostly used to find alternative for 404 pages or SERP operations.  
+Carbon aims to find related results for the given URLs or Keywords.  
+It's mostly used to find alternatives for 404 pages or SERP operations.  
 It exports data in Excel or Google Sheets.
 
 The API is served at AWS Lambda.
 
 ## Features
 
-- Supports URL and Keyword options.
+- Supports URL and Keyword option.
 	- URL option; finds related 3 URLs.  
 	  Mostly used to find alternative URLs for 404 pages.  
-	- Keyword option; finds related 10 URLs.  
-	  The result includes title, url, and description for each input keywords.  
+	- Keyword option; finds related 10 results.  
+	  The result includes title, url, and description for each keywords.  
 	  Mostly used for SERP.  
+- Shows fails with a reason in a sperated sheet.
+- Automatically trims duplicated inputs.
 - Supports country and language specification.  
 - Supports 2 export options; Excel and Google Sheets.  
-	- Suggested URLs are made bold for URL options.  
+	- For URL option, makes a suggestion that is most similar with the input.  
 - Supports internal accounts with limitation.
 	- For non-login users, the limit is 100 URLs.
 - Supports 2 resources to take SERP data.
@@ -144,13 +146,19 @@ go build -o carbon && zip deploy.zip carbon
 
 Create the function.
 ```shell
-aws lambda create-function --function-name CarbonLambda --handler carbon --runtime go1.x --role  arn:aws:iam::<account-id>:role/<role> --zip-file fileb://./deploy.zip --tracing-config Mode=Active
+aws lambda create-function --function-name CarbonLambda \
+    --handler carbon --runtime go1.x \
+    --role  arn:aws:iam::<account-id>:role/<role> \
+    --zip-file fileb://./deploy.zip \
+    --tracing-config Mode=Active
 ```
 
 If you need to update the function, take a build and run this command.
 ```shell
 aws lambda update-function-code --function-name CarbonLambda --zip-file fileb://./deploy.zip
 ```
+
+Note: To increase API Gateway's timeout limit, check this repo: [**Timeout Increaser**](https://github.com/zeoagency/aws-api-gateway-timeout-increaser)
 
 ## Credits
 

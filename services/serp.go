@@ -52,12 +52,15 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 	}
 
 	api, selected := helpers.RandomAPICred()
+	if selected == -1 {
+		return nil, http.StatusServiceUnavailable, errors.New("We have some issues with the SERP API at this moment. Please try later.")
+	}
+
 	for i, _ := range api.Keys {
-		if selected == -1 {
-			// -1 means the selected address-key is empty.
-			continue
+		if i >= 6 {
+			break
 		}
-		// Example; If the selected is 4, Then it works like that: 4,5,6,7,8,9,0,1,2,3
+		// Example; If the selected is 4, Then it works like that: 4,5,6,7,8,9
 		address, key := api.Keys[(selected+i)%len(api.Keys)].Address, api.Keys[(selected+i)%len(api.Keys)].Key
 
 		// Create the request.
@@ -103,9 +106,9 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 			}
 		}
 
-		log.Println("Error: Unavailable SERP API Service.")
 	}
 
+	log.Println("Error: Unavailable SERP API Service.")
 	return nil, http.StatusServiceUnavailable, errors.New("We have some issues with the SERP API at this moment. Please try later.")
 }
 
