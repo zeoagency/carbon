@@ -97,11 +97,3 @@ func (kw *KeywordSet) ToStringSlice() []string {
 
 	return r
 }
-
-// Returns the original value for the given string.
-func (kw *KeywordSet) Original(k string) string {
-	if _, ok := kw.Keywords[k]; ok {
-		return k
-	}
-	return ""
-}

@@ -61,7 +61,7 @@ func getResultFromDFSApi(kws keywords, country, language string, serpLimit int) 
 		})
 
 		wg.Add(1)
-		go sendRequest(wg, responses, kws.Original(kw), rq)
+		go sendRequest(wg, responses, kw, rq)
 	}
 
 	wg.Wait()
@@ -106,11 +106,12 @@ func sendRequest(wg *sync.WaitGroup, responses map[string]*dfsApiResponse, key s
 	}
 
 	response := dfsApiResponse{}
-	err = json.Unmarshal(body, &response) // TODO: handle this error.
+	_ = json.Unmarshal(body, &response) // TODO: handle this error.
 
 	// Check the result's (body) status code.
 	if !(response.StatusCode >= 20000 && response.StatusCode <= 29999) {
 		log.Printf("Error: Unavailable DFS API Service. Status: %d\n", response.StatusCode)
+		return
 	}
 
 	responses[key] = &response
@@ -120,30 +121,33 @@ func sendRequest(wg *sync.WaitGroup, responses map[string]*dfsApiResponse, key s
 // It only adds to success list when domains are matched.
 // If it couldn't find any related URLs, it adds to the fail list.
 func parseDFSResponseToFieldsForURLs(responses map[string]*dfsApiResponse, urlSet *models.URLSet) {
-	for originalURL, response := range responses {
-		for _, task := range response.Tasks {
-			r := []string{}
-			for _, result := range task.Result {
-				for _, item := range result.Items {
-					if len(r) == 3 {
-						break
-					}
+	for _, url := range urlSet.URLs {
+		r := []string{}
+		if response := responses[url.String()]; response != nil {
+			for _, task := range response.Tasks {
+				for _, result := range task.Result {
+					for _, item := range result.Items {
+						if len(r) == 3 {
+							break
+						}
 
-					urlDomain, _, err := helpers.ExtractURL(item.URL)
-					if err != nil {
-						continue // The result's URL is not a valid URL.
-					}
-					if urlSet.URLs[result.Keyword].BaseURL == urlDomain {
-						r = append(r, item.URL)
+						urlDomain, _, err := helpers.ExtractURL(item.URL)
+						if err != nil {
+							continue // The result's URL is not a valid URL.
+						}
+						if urlSet.URLs[result.Keyword].BaseURL == urlDomain {
+							r = append(r, item.URL)
+						}
 					}
 				}
-			}
 
-			if len(r) != 0 {
-				urlSet.AddSuccess(originalURL, r)
-			} else {
-				urlSet.AddFail(originalURL, "We could not find any related URLs.")
 			}
+		}
+
+		if len(r) != 0 {
+			urlSet.AddSuccess(url.FullURL, r)
+		} else {
+			urlSet.AddFail(url.FullURL, "We could not find any related URLs.")
 		}
 	}
 }
@@ -152,26 +156,28 @@ func parseDFSResponseToFieldsForURLs(responses map[string]*dfsApiResponse, urlSe
 // It only adds to success list when the value is valid.
 // If it couldn't find any results, it adds to the fail list.
 func parseDFSResponseToFieldsForKeywords(responses map[string]*dfsApiResponse, keywordSet *models.KeywordSet) {
-	for keyword, response := range responses {
-		for _, task := range response.Tasks {
-			r := []models.KeywordSuccessResult{}
-			for _, result := range task.Result {
-				for _, item := range result.Items {
-					if len(r) == 10 {
-						break
+	for keyword, _ := range keywordSet.Keywords {
+		r := []models.KeywordSuccessResult{}
+		if response := responses[keyword]; response != nil {
+			for _, task := range response.Tasks {
+				for _, result := range task.Result {
+					for _, item := range result.Items {
+						if len(r) == 10 {
+							break
+						}
+						r = append(r, models.KeywordSuccessResult{
+							Title: item.Title,
+							Desc:  item.Description,
+							URL:   item.URL,
+						})
 					}
-					r = append(r, models.KeywordSuccessResult{
-						Title: item.Title,
-						Desc:  item.Description,
-						URL:   item.URL,
-					})
 				}
 			}
-			if len(r) != 0 {
-				keywordSet.AddSuccess(keyword, r)
-			} else {
-				keywordSet.AddFail(keyword, "We could not find any related URLs.")
-			}
+		}
+		if len(r) != 0 {
+			keywordSet.AddSuccess(keyword, r)
+		} else {
+			keywordSet.AddFail(keyword, "We could not find any related URLs.")
 		}
 	}
 }

@@ -147,11 +147,3 @@ func (u *url) String() string {
 	}
 	return result
 }
-
-// Returns the original value for the given string.
-func (us *URLSet) Original(u string) string {
-	if uu, ok := us.URLs[u]; ok {
-		return uu.FullURL
-	}
-	return ""
-}

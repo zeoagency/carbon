@@ -117,7 +117,6 @@ func getResultFromSerpApi(kws keywords, country, language string, serpLimit int)
 // If it couldn't find any related URLs, it adds to the fail list.
 func parseSERPResponseToFieldsForURLs(response map[string][]serpApiResponse, urlSet *models.URLSet) {
 	for _, url := range urlSet.URLs {
-		originalURL := url.FullURL
 		r := []string{}
 		for _, value := range response[url.String()] {
 			for _, v := range value.Result.Left {
@@ -138,9 +137,9 @@ func parseSERPResponseToFieldsForURLs(response map[string][]serpApiResponse, url
 		}
 		// Add results to the lists.
 		if len(r) != 0 {
-			urlSet.AddSuccess(originalURL, r)
+			urlSet.AddSuccess(url.FullURL, r)
 		} else {
-			urlSet.AddFail(originalURL, "We could not find any related URLs.")
+			urlSet.AddFail(url.FullURL, "We could not find any related URLs.")
 		}
 	}
 }
