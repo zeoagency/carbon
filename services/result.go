@@ -16,33 +16,41 @@ type keywords interface {
 // GetResultByUsingURLs add the result to the given URLSet by talking with Serp API or DFS.
 func GetResultByUsingURLs(urls *models.URLSet, country, language string) (int, error) {
 	response, _, err := getResultFromSerpApi(urls, country, language, 10)
-	if err != nil {
-		response, status, err := getResultFromDFSApi(urls, country, language, 10)
-		if err != nil {
-			return status, err
+	if err == nil {
+		parseSERPResponseToFieldsForURLs(response, urls)
+		if len(urls.URLs) == 0 {
+			return http.StatusOK, nil
 		}
-
-		parseDFSResponseToFieldsForURLs(response, urls)
-		return http.StatusOK, nil
 	}
 
-	parseSERPResponseToFieldsForURLs(response, urls)
+	// That means there is still unprocessed URLs exist.
+
+	dfsresponse, status, err := getResultFromDFSApi(urls, country, language, 10)
+	if err != nil {
+		return status, err
+	}
+
+	parseDFSResponseToFieldsForURLs(dfsresponse, urls)
 	return http.StatusOK, nil
 }
 
 // GetResultByUsingKeywords returns related 10 results for each Keywords by talking with SEPR API or DFS.
 func GetResultByUsingKeywords(keywords *models.KeywordSet, country, language string) (int, error) {
-	response, _, err := getResultFromSerpApi(keywords, country, language, 20)
-	if err != nil {
-		response, status, err := getResultFromDFSApi(keywords, country, language, 20)
-		if err != nil {
-			return status, err
+	response, _, err := getResultFromSerpApi(keywords, country, language, 10)
+	if err == nil {
+		parseSERPResponseToFieldsForKeywords(response, keywords)
+		if len(keywords.Keywords) == 0 {
+			return http.StatusOK, nil
 		}
-
-		parseDFSResponseToFieldsForKeywords(response, keywords)
-		return http.StatusOK, nil
 	}
 
-	parseSERPResponseToFieldsForKeywords(response, keywords)
+	// That means there is still unprocessed Keywords exist.
+
+	dfsresponse, status, err := getResultFromDFSApi(keywords, country, language, 10)
+	if err != nil {
+		return status, err
+	}
+
+	parseDFSResponseToFieldsForKeywords(dfsresponse, keywords)
 	return http.StatusOK, nil
 }

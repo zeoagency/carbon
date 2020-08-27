@@ -283,10 +283,14 @@ func getParam(request events.APIGatewayProxyRequest, param string) (string, erro
 
 // checkLimit checks limit for the user.
 func checkLimit(bodyLen int, isInternal bool, iLimit int) (int, error) {
+	if bodyLen == 0 {
+		return http.StatusBadRequest, errors.New("You don't have any value.")
+	}
+
 	if !isInternal {
 		// Check the count for non-login user.
 		if bodyLen > 100 {
-			return http.StatusBadRequest, errors.New("You have more than 100 URLs.")
+			return http.StatusBadRequest, errors.New("You have more than 100 values.")
 		}
 		return http.StatusOK, nil
 	}
@@ -296,7 +300,7 @@ func checkLimit(bodyLen int, isInternal bool, iLimit int) (int, error) {
 		return http.StatusOK, nil
 	default: // has a limit.
 		if bodyLen > iLimit {
-			return http.StatusBadRequest, fmt.Errorf("You have more than %d URLs.", iLimit)
+			return http.StatusBadRequest, fmt.Errorf("You have more than %d values.", iLimit)
 		}
 	}
 

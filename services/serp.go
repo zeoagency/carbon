@@ -138,6 +138,7 @@ func parseSERPResponseToFieldsForURLs(response map[string][]serpApiResponse, url
 		// Add results to the lists.
 		if len(r) != 0 {
 			urlSet.AddSuccess(url.FullURL, r)
+			delete(urlSet.URLs, url.String())
 		} else {
 			urlSet.AddFail(url.FullURL, "We could not find any related URLs.")
 		}
@@ -169,6 +170,7 @@ func parseSERPResponseToFieldsForKeywords(response map[string][]serpApiResponse,
 		// Add results to the lists.
 		if len(r) != 0 {
 			keywordSet.AddSuccess(keyword, r)
+			delete(keywordSet.Keywords, keyword)
 		} else {
 			keywordSet.AddFail(keyword, "We could not find any result.")
 		}

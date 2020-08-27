@@ -146,6 +146,8 @@ func parseDFSResponseToFieldsForURLs(responses map[string]*dfsApiResponse, urlSe
 
 		if len(r) != 0 {
 			urlSet.AddSuccess(url.FullURL, r)
+			delete(urlSet.URLs, url.String())
+			delete(urlSet.Fails, url.String()) // remove from fail list
 		} else {
 			urlSet.AddFail(url.FullURL, "We could not find any related URLs.")
 		}
@@ -176,6 +178,8 @@ func parseDFSResponseToFieldsForKeywords(responses map[string]*dfsApiResponse, k
 		}
 		if len(r) != 0 {
 			keywordSet.AddSuccess(keyword, r)
+			delete(keywordSet.Keywords, keyword)
+			delete(keywordSet.Fails, keyword) // remove from fail list
 		} else {
 			keywordSet.AddFail(keyword, "We could not find any related URLs.")
 		}
